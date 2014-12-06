@@ -3,8 +3,8 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
-    <script type="text/javascript" src="/311DataVisualization/d3/d3.js"></script>
-    <script type="text/javascript" src="/311DataVisualization/d3/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="/CS235-Invincibles/d3/d3.js"></script>
+    <script type="text/javascript" src="/CS235-Invincibles/d3/jquery-1.7.1.min.js"></script>
     <style>
 
         body {
@@ -87,9 +87,9 @@
 
     </div>
 </div>
-<div style="margin-left: 183px;margin-top: 23px;"><img src="/311DataVisualization/d3-311/borough-Trans.gif"  ></div>
+<div style="margin-left: 183px;margin-top: 23px;"><img src="/CS235-Invincibles/d3-311/borough-Trans.gif"  ></div>
 <div style="position: absolute; top:8.3em;left: 2.5em;" id="nycMap" ></div>
-<div style="position: absolute;float: left;left:1em;top:5em"><a href="/311DataVisualization/d3-311/CS235.html">Home</a> </div>
+<div style="position: absolute;float: left;left:1em;top:5em"><a href="/CS235-Invincibles/d3-311/CS235.html">Home</a> </div>
 
 <script>
     var width = 960,
@@ -105,7 +105,7 @@
             .translate([(width) / 2, (height)/2]);
 
     //Generate Map
-    d3.json("/311DataVisualization/d3-311/nyc.json", function(error, nyb) {
+    d3.json("/CS235-Invincibles/d3-311/nyc.json", function(error, nyb) {
 
         var path = d3.geo.path()
                 .projection(projection);
@@ -129,7 +129,7 @@
 
     //Load in cities data
     var i=0;
-    d3.csv("/311DataVisualization/d3-311/BoroughDataNov.csv", function(data) {
+    d3.csv("/CS235-Invincibles/d3-311/BoroughDataNov.csv", function(data) {
 
         dataSet=data
 

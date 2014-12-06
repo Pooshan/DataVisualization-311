@@ -3,9 +3,9 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
-    <script type="text/javascript" src="/311DataVisualization/d3/d3.js"></script>
-    <script type="text/javascript" src="/311DataVisualization/d3/jquery-1.7.1.min.js"></script>
-    <script type="text/javascript" src="/311DataVisualization/d3/d3.layout.cloud.js"></script>
+    <script type="text/javascript" src="/CS235-Invincibles/d3/d3.js"></script>
+    <script type="text/javascript" src="/CS235-Invincibles/d3/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="/CS235-Invincibles/d3/d3.layout.cloud.js"></script>
     <style>
 
         body {
@@ -244,7 +244,7 @@
         <div><b>Closed/Open service request</b></div>
     </div>
 
-    <div style="position: absolute;float: left;left:81em;top:5em"><a href="/311DataVisualization/d3-311/CS235-GeoBorough.html">Geographic distribution</a> </div>
+    <div style="position: absolute;float: left;left:81em;top:5em"><a href="/CS235-Invincibles/d3-311/CS235-GeoBorough.html">Geographic distribution</a> </div>
 </div>
 
 <div id="novBrush" style="position: absolute;left:2em;top:21em;z-index: 2;">
@@ -340,11 +340,11 @@ var mapColor =
             "rgba(154, 162, 55, 1)",
             "rgba(166, 113, 135, 1)"];
 var novOpenCase
-d3.csv('/311DataVisualization/d3-311/NovOpenCase.csv', function (err, novOC) {
+d3.csv('/CS235-Invincibles/d3-311/NovOpenCase.csv', function (err, novOC) {
     novOpenCase = novOC;
 })
 //map
-d3.json("/311DataVisualization/d3-311/nyc.json", function (error, nyb) {
+d3.json("/CS235-Invincibles/d3-311/nyc.json", function (error, nyb) {
 
     var BoroughName = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"]
 
@@ -665,7 +665,7 @@ function createBrush() {
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     //Show the data on map
-    d3.csv('/311DataVisualization/d3-311/BoroughDataNov.csv', function (err, nov) {
+    d3.csv('/CS235-Invincibles/d3-311/BoroughDataNov.csv', function (err, nov) {
         var maxCreated = d3.max(nov, function (d) {
             return parseInt(d.date_mday)
         });
@@ -812,7 +812,7 @@ function createBrush() {
 //on click
 function CreateUpdateBarNov(Allborough, selectedBorough) {
 
-    d3.csv('/311DataVisualization/d3-311/boroughBarChart.csv', function (err, novBCData) {
+    d3.csv('/CS235-Invincibles/d3-311/boroughBarChart.csv', function (err, novBCData) {
 
         var filterData = novBCData.filter(function (d) {
 
@@ -925,7 +925,7 @@ function monthlineChart() {
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-    d3.csv("/311DataVisualization/d3-311/MonthlyChart.csv", function (error, data) {
+    d3.csv("/CS235-Invincibles/d3-311/MonthlyChart.csv", function (error, data) {
         var labelVar = 'quarter';
         var varNames = d3.keys(data[0]).filter(function (key) {
             return key !== labelVar;
@@ -1185,7 +1185,7 @@ var barNovComplain = d3.select("#serviceCompalin")
         .attr('height', parseFloat((bar_height + gap * 2) * 5 + 30));
 
 function topSerivceComplain(selectedBorough) {
-    d3.csv('/311DataVisualization/d3-311/AgencyComplainType.csv', function (err, serviceData) {
+    d3.csv('/CS235-Invincibles/d3-311/AgencyComplainType.csv', function (err, serviceData) {
         dataSet = [];
         if (selectedBorough != "All") {
             var serviceData = serviceData.filter(function (d) {
@@ -1385,7 +1385,7 @@ var chartAgencyReceiveMostComplain = d3.select("#AgencyReceiveMostComplain")
         .attr('height', parseFloat((bar_height + gap * 2) * 5 + 30));
 
 function AgencyReceiveMostComplain(selectedBorough){
-    d3.csv('/311DataVisualization/d3-311/AgencyBoroughCount.csv',function(err,agencyDataSet){
+    d3.csv('/CS235-Invincibles/d3-311/AgencyBoroughCount.csv',function(err,agencyDataSet){
 
         var dataSet = [];
         if (selectedBorough != "All") {
@@ -1513,7 +1513,7 @@ var chartMaxTime = d3.select("#AgencyMaxTime")
         .attr('height', parseFloat((bar_height + gap * 2) * 5 + 30))
 
 function AgencyMaxAverageTime(selectedBorough){
-    d3.csv('/311DataVisualization/d3-311/AverageServiceClosetime.csv',function(err,agencyDataSet){
+    d3.csv('/CS235-Invincibles/d3-311/AverageServiceClosetime.csv',function(err,agencyDataSet){
 
         var dataSet = [];
         if (selectedBorough != "All") {
@@ -1647,7 +1647,7 @@ var chartMinTime = d3.select("#AgencyMinTime")
         .attr('width', parseFloat(left_width + bar_width + 40))
         .attr('height', parseFloat((bar_height + gap * 2) * 5 + 30))
 function AgencyMinAverageTime(selectedBorough){
-    d3.csv('/311DataVisualization/d3-311/AverageServiceClosetime.csv',function(err,agencyDataSet){
+    d3.csv('/CS235-Invincibles/d3-311/AverageServiceClosetime.csv',function(err,agencyDataSet){
 
         var dataSet = [];
         if (selectedBorough != "All") {
