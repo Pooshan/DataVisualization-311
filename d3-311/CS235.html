@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="/311DataVisualization/d3/d3.js"></script>
+    <script type="text/javascript" src="/311DataVisualization/d3/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="/311DataVisualization/d3/d3.layout.cloud.js"></script>
+    <style>
+
+        body {
+            background-image: url('../css/images/bg02.png');
+        }
+
+        #menuBar {
+            background-color: #364050;
+            margin-top: -20px;
+            width: 100%;
+        }
+
+        #logo {
+            font-family: 'Open Sans Condensed', sans-serif;
+            font-weight: 500;
+            font-size: 2em;
+            letter-spacing: 0.1em;
+            width: 184px;
+        }
+
+        #logo a {
+            display: block;
+
+            background-color: #c94663;
+
+            background-image: url('../css/images/bg01.png');
+
+            padding: 0.475em 0.25em;
+
+            border-radius: 0.2em;
+
+            text-align: center;
+
+            box-shadow: inset 0px 0px 0px 1px rgba(255, 255, 255, 0.15), 0 0.025em 0.15em 0em rgba(0, 0, 0, 0.25);
+
+            text-decoration: none;
+
+            color: #fff;
+
+        }
+
+        .axis text {
+            font: 8px sans-serif;
+        }
+
+        .axis path {
+            display: none;
+        }
+
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+
+        .grid-background {
+            fill: #ddd;
+        }
+
+        .grid line,
+        .grid path {
+            fill: none;
+            stroke: #fff;
+            shape-rendering: crispEdges;
+        }
+
+        .grid .minor.tick line {
+            stroke-opacity: .5;
+        }
+
+        .brush .extent {
+            stroke: #000;
+            fill-opacity: .125;
+            shape-rendering: crispEdges;
+        }
+
+        #tooltip {
+            position: absolute;
+            width: 130px;
+            height: auto;
+            padding: 10px;
+            background-color: white;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            border-radius: 10px;
+            -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        #tooltip.hidden {
+            display: none;
+        }
+
+        #tooltip p {
+            margin: 0;
+            font-family: sans-serif;
+            font-size: 16px;
+            line-height: 20px;
+        }
+
+        .bar {
+            fill: steelblue;
+        }
+
+        .baraxis path,
+        .baraxis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+
+        .baraxis {
+            font: 10px sans-serif;
+        }
+
+        .agchart {
+            background: #b0e0f8;
+            margin: 5px;
+        }
+
+        .agchart rect {
+            stroke: white;
+            fill: steelblue;
+        }
+
+        .agchart text {
+            fill: white;
+        }
+
+        .agchart text.name {
+            fill: #000;
+        }
+
+        .agchart line {
+            stroke: #c1c1c1;
+        }
+
+        .agchart .rule {
+            fill: #000;
+        }
+
+        rect.bordered {
+            stroke: #E6E6E6;
+            stroke-width: 2px;
+        }
+
+        text.mono {
+            font-size: 9pt;
+            font-family: Consolas, courier;
+            fill: #aaa;
+        }
+
+        text.axis-workweek {
+            fill: #000;
+        }
+
+        text.axis-worktime {
+            fill: #000;
+        }
+
+        .axisline path,
+        .axisline line {
+            fill: none;
+            stroke: #121401;
+            stroke-width: 2px;
+            shape-rendering: crispEdges;
+        }
+
+
+
+        .agchart {
+            background: #b0e0f8;
+            margin: 5px;
+        }
+
+        .agchart rect {
+            stroke: white;
+            fill: steelblue;
+        }
+
+        .agchart text {
+            fill: black;
+            font-size: .8em;
+        }
+
+        .agchart text.name {
+            fill: #000;
+        }
+
+        .agchart line {
+            stroke: #c1c1c1;
+        }
+
+        .agchart .rule {
+            fill: #000;
+        }
+
+
+    </style>
+</head>
+<body style="height: 100%">
+<div id="menuBar">
+
+    <h1 id="logo">
+        <a>311</a>
+    </h1>
+    <div  style="color: #ffffff;position: absolute; text-align: center;top:1.1em;left:12em;font-weight: 500;
+            font-size: 2em;">
+        <div id="totalCount"  style="color: #ffffff;float: left;" ></div>
+        <div style="color: #ffffff;float: left;">&nbsp;&nbsp;&nbsp;</div>
+        <div id="openCase" style="color: #ffffff;float: left;"></div>
+
+    </div>
+
+</div>
+
+
+<div id="tooltip" class="hidden">
+    <p><strong></strong><span id="value">100</span></p>
+</div>
+
+<div style="">
+
+    <div id="monthlinechart" style="float: left;position: relative;top:0em">
+        <div><b>Service call distribution over month</b></div>
+    </div>
+
+    <div style="position: absolute;left:30em;top:10em"><b>Hourly distribution of service calls over the week (Month of- November)</b></div>
+    <div id="heatMapChart" style="float: left;position: absolute;left:27em;top:10em">
+
+    </div>
+    <div id="novOpenCase" style="position: absolute;float: left;left:63em;top:5em">
+        <div><b>Closed/Open service request</b></div>
+    </div>
+
+    <div style="position: absolute;float: left;left:81em;top:5em"><a href="/311DataVisualization/d3-311/CS235-GeoBorough.html">Geographic distribution</a> </div>
+</div>
+
+<div id="novBrush" style="position: absolute;left:2em;top:21em;z-index: 2;">
+
+    <div><b>(Month- November) Day Scale </b></div>
+</div>
+<div id="serviceCompalin" style="position: absolute; left:35em;top:22em; z-index: -2;">
+
+    <div><b>Most received service request</b></div>
+</div>
+
+<div style="float: left;position:absolute;left: 2em;top:26em ">
+
+    <table>
+        <tr>
+            <td><b>Borough&nbsp;&nbsp;</b></td>
+            <td>Bronx&nbsp;&nbsp;  </td>
+            <td>Brooklyn&nbsp;&nbsp;  </td>
+            <td>Manhattan&nbsp;&nbsp;  </td>
+            <td>Queens&nbsp;&nbsp;  </td>
+            <td>Staten Island&nbsp;&nbsp;  </td>
+        </tr>
+        <tr>
+            <td><b> Count</b></td>
+            <td>
+                <div id="BRONX"></div>
+            </td>
+            <td>
+                <div id="BROOKLYN"></div>
+            </td>
+            <td>
+                <div id="MANHATTAN"></div>
+            </td>
+            <td>
+                <div id="QUEENS"></div>
+            </td>
+            <td>
+                <div id="STATENISLAND"></div>
+            </td>
+        </tr>
+
+    </table>
+
+</div>
+<div style="position: absolute; cursor:pointer; left:24em;top:30em" onclick="reset()"><a href="#">Refresh</a> </div>
+<div id="barNov" style="position: absolute;top: 20em;left: 4em;"></div>
+<div id="AgencyReceiveMostComplain" style="position: absolute;top: 34em; left:35.0em; z-index: -2;">
+    <div><b>Agencies receive most service request</b></div>
+</div>
+<div id="AgencyMaxTime"  style="position: absolute;top: 22em;; left:65.0em; z-index: -2;">
+    <div><b>Agencies with maximum avg. resolution time</b></div>
+</div>
+<div id="AgencyMinTime"  style="position: absolute;top: 34em;; left:65.0em; z-index: -2;">
+    <div><b>Agencies with minimum avg. resolution time</b></div>
+</div>
+
+
+
+<!--<div  id="nycMap" style="position: relative;margin-left: 69%" ></div>-->
+
+<script>
+
+
+var borough = [
+    {Name: "BRONX", Count: 0, Latitude: 40.87740813, Longitude: -73.88526915}
+    ,
+    {Name: "BROOKLYN", Count: 0, Latitude: 40.62768397, Longitude: -73.96075748},
+    {Name: "MANHATTAN", Count: 0, Latitude: 40.79753455, Longitude: -73.95975127},
+    {Name: "QUEENS", Count: 0, Latitude: 40.70861121, Longitude: -73.82885164, Drawn: 0},
+    {Name: "STATEN ISLAND", Count: 0, Latitude: 40.581447093379374, Longitude: -74.15292236414053}
+];
+
+var widthmap = 360,
+        heightmap = 200;
+
+var svgmap = d3.select("#nycMap").append("svg")
+        .attr("width", widthmap)
+        .attr("height", heightmap);
+var projection = d3.geo.mercator()
+        .center([-73.94, 40.70])
+        .scale(22000)
+        .translate([(widthmap) / 2, (heightmap) / 2]);
+var wDN = 180;
+var hDN = 150;
+
+var barNov = d3.select("#barNov").append("svg").attr("width", wDN).attr("height", hDN);
+var BoroughName = ["BRONX", "BROOKLYN", "MANHATTAN", "QUEENS", "STATEN ISLAND"]
+//Generate Map
+var mapColor =
+        ["rgba(229, 197, 76, 1)",
+            "rgba(200, 115, 41, 1)",
+            "rgba(111, 142, 162, 1)",
+            "rgba(154, 162, 55, 1)",
+            "rgba(166, 113, 135, 1)"];
+var novOpenCase
+d3.csv('/311DataVisualization/d3-311/NovOpenCase.csv', function (err, novOC) {
+    novOpenCase = novOC;
+})
+//map
+d3.json("/311DataVisualization/d3-311/nyc.json", function (error, nyb) {
+
+    var BoroughName = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"]
+
+
+    var path = d3.geo.path()
+            .projection(projection);
+
+    var g = svgmap.append("g");
+
+    g.append("g")
+            .attr("id", "boroughs")
+            .selectAll(".state")
+            .data(nyb.features)
+            .enter().append("path")
+            .attr("class", function (d) {
+                return d.properties.name;
+            })
+            .attr("d", path).style("fill", function (d) {
+                //console.log(d);
+                return mapColor[BoroughName.indexOf(d.properties.borough)]
+            });
+
+});
+function createStackChart() {
+    var margins = {
+                top: 12,
+                left: 48,
+                right: 24,
+                bottom: 24
+            },
+            legendPanel = {
+                width: 180
+            },
+            width = 500 - margins.left - margins.right - legendPanel.width,
+            height = 200 - margins.top - margins.bottom,
+            dataset = [
+                {
+                    data: [
+                        {
+                            borough: 'BRONX',
+                            count: 12363
+                        },
+                        {
+                            borough: 'BROOKLYN',
+                            count: 18567
+                        },
+                        {
+                            borough: 'MANHATTAN',
+                            count: 13127
+                        },
+                        {
+                            borough: 'QUEENS',
+                            count: 15155
+                        },
+                        {
+                            borough: 'STATEN ISLAND',
+                            count: 2289
+                        }
+                    ],
+                    name: 'Closed Case'
+                },
+                {
+                    data: [
+                        {
+                            borough: 'BRONX',
+                            count: 13162
+                        },
+                        {
+                            borough: 'BROOKLYN',
+                            count: 18048
+                        },
+                        {
+                            borough: 'MANHATTAN',
+                            count: 12946
+                        },
+                        {
+                            borough: 'QUEENS',
+                            count: 9997
+                        },
+                        {
+                            borough: 'STATEN ISLAND',
+                            count: 1801
+                        }
+                    ],
+                    name: 'Open Case'
+                }
+
+            ],
+            series = dataset.map(function (d) {
+                return d.name;
+            }),
+            dataset = dataset.map(function (d) {
+                return d.data.map(function (o, i) {
+                    // Structure it so that your numeric
+                    // axis (the stacked amount) is y
+                    return {
+                        y: o.count,
+                        x: o.borough
+                    };
+                });
+            }),
+            stack = d3.layout.stack();
+
+    stack(dataset);
+
+    var dataset = dataset.map(function (group) {
+                return group.map(function (d) {
+                    // Invert the x and y values, and y0 becomes x0
+                    return {
+                        x: d.y,
+                        y: d.x,
+                        x0: d.y0
+                    };
+                });
+            }),
+            svg = d3.select('#novOpenCase')
+                    .append('svg')
+                    .attr('width', width + margins.left + margins.right + legendPanel.width)
+                    .attr('height', height + margins.top + margins.bottom)
+                    .append('g')
+                    .attr('transform', 'translate(' + margins.left + ',' + margins.top + ')'),
+            xMax = d3.max(dataset, function (group) {
+                return d3.max(group, function (d) {
+                    return d.x + d.x0;
+                });
+            }),
+            xScale = d3.scale.linear()
+                    .domain([0, xMax])
+                    .range([0, width]),
+            boroughs = dataset[0].map(function (d) {
+                return d.y;
+            }),
+    // _ = console.log(months),
+            yScale = d3.scale.ordinal()
+                    .domain(boroughs)
+                    .rangeRoundBands([0, height], .1),
+            xAxis = d3.svg.axis()
+                    .scale(xScale)
+                    .orient('bottom'),
+            yAxis = d3.svg.axis()
+                    .scale(yScale)
+                    .orient('left'),
+            colours = d3.scale.category10(),
+            groups = svg.selectAll('g')
+                    .data(dataset)
+                    .enter()
+                    .append('g')
+                    .style('fill', function (d, i) {
+                        return colours(i);
+                    }),
+            rects = groups.selectAll('rect')
+                    .data(function (d) {
+                        return d;
+                    })
+                    .enter()
+                    .append('rect')
+                    .attr('x', function (d) {
+                        return xScale(d.x0);
+                    })
+                    .attr('y', function (d, i) {
+                        return yScale(d.y);
+                    })
+                    .attr('height', function (d) {
+                        return yScale.rangeBand();
+                    })
+                    .attr('width', function (d) {
+                        return xScale(d.x);
+                    })
+                    .on('mouseover', function (d) {
+                        var xPos = parseFloat(d3.select(this).attr('x')) / 2 + width / 2;
+                        var yPos = parseFloat(d3.select(this).attr('y')) + yScale.rangeBand() / 2;
+                        //alert(yPos)
+                        d3.select('#tooltip')
+                                .style('left', xPos + 900 + 'px')
+                                .style('top', yPos + 37 + 'px')
+                                .style('z-index', 2)
+                                .select('#value')
+                                .text(d.x);
+
+                        d3.select('#tooltip').classed('hidden', false);
+                    })
+                    .on('mouseout', function () {
+                        d3.select('#tooltip').classed('hidden', true);
+                    })
+
+    svg.append('g')
+            .attr('class', 'baraxis')
+            .attr('transform', 'translate(0,' + height + ')')
+            .call(xAxis);
+
+    svg.append('g')
+            .attr('class', 'baraxis')
+            .call(yAxis);
+
+    svg.append('rect')
+            .attr('fill', 'transparent')
+            .attr('width', 100)
+            .attr('height', 30 * dataset.length)
+            .attr('x', width + margins.left)
+            .attr('y', 0);
+
+    series.forEach(function (s, i) {
+        svg.append('text')
+                .attr('fill', 'black')
+                .attr('x', width + margins.left + 8 - 50)
+                .attr('y', i * 24 + 24 + 50)
+                .text(s);
+        svg.append('rect')
+                .attr('fill', colours(i))
+                .attr('width', 60)
+                .attr('height', 20)
+                .attr('x', width + margins.left + 90 - 50)
+                .attr('y', i * 24 + 6 + 50);
+    });
+}
+
+function reset(){
+       CreateUpdateDoughNut(resetborough, resetTotlal);
+    topSerivceComplain("All");
+    AgencyReceiveMostComplain("All")
+    AgencyMaxAverageTime("All")
+    AgencyMinAverageTime("All")
+}
+
+function CreateUpdateDoughNut(borough, total) {
+    var BoroughName = ["BRONX", "BROOKLYN", "MANHATTAN", "QUEENS", "STATEN ISLAND"]
+    var dataset = [];
+    for (var key in borough) {
+        dataset.push(parseFloat((borough[key].Count / total) * 100).toFixed(2));
+    }
+    var xBarNov = d3.scale.ordinal()
+            .rangeRoundBands([0, wDN * 2], .5);
+
+    var yBarNov = d3.scale.linear()
+            .range([hDN, 0]);
+
+    var xAxisbar = d3.svg.axis()
+            .scale(xBarNov)
+            .orient("bottom");
+
+    var yAxisbar = d3.svg.axis()
+            .scale(yBarNov)
+            .orient("left")
+            .ticks(10, "%");
+    barNov.select("g").remove();
+    var svgBar = barNov
+            .append("g")
+            .attr("transform", "translate(" + wDN /4 + "," + wDN + ")");
+
+    xBarNov.domain(borough.map(function (d) {
+        return d.Name;
+    }));
+    yBarNov.domain([0, d3.max(borough, function (d) {
+        return  parseInt(d.Count) / total;
+    })]);
+
+    svgBar.append("g")
+            .attr("class", "x baraxis")
+            .attr("transform", "translate(0," + hDN + ")")
+            .call(xAxisbar).selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function (d) {
+                return "rotate(-65)"
+            });
+
+    svgBar.append("g")
+            .attr("class", "y baraxis")
+            .call(yAxisbar)
+            .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Total %");
+
+    svgBar.selectAll(".bar")
+            .data(borough)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", function (d) {
+                return xBarNov(d.Name);
+            })
+            .attr("width", xBarNov.rangeBand())
+            .attr("y", function (d) {
+                return yBarNov(d.Count / total);
+            })
+            .attr("height", function (d) {
+                return hDN - yBarNov(d.Count / total);
+            }).style("cursor","pointer")
+            .on("click", function (d) {
+                //console.log(d);
+                //CreateUpdateBarNov(borough, d)
+                d3.selectAll(".bar").style("fill", "steelblue");
+                d3.select(this).style("fill",  mapColor[BoroughName.indexOf(d.Name)]);
+                topSerivceComplain(d);
+                AgencyReceiveMostComplain(d);
+                AgencyMaxAverageTime(d)
+                AgencyMinAverageTime(d)
+            });
+}
+var startday = 0;
+var endday = 0;
+
+var resetTotlal=0;
+var resetborough;
+function createBrush() {
+    var margin = {top: 0, right: 40, bottom: 3, left: 40},
+            widthnov = 500 - margin.left - margin.right,
+            heightnov = 30 - margin.top - margin.bottom,
+            contextHeight = 50,
+            contextWidth = widthnov * .5;
+    var novBrush = d3.select("#novBrush").append("svg")
+            .attr("width", widthnov + margin.left + margin.right)
+            .attr("height", heightnov + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    //Show the data on map
+    d3.csv('/311DataVisualization/d3-311/BoroughDataNov.csv', function (err, nov) {
+        var maxCreated = d3.max(nov, function (d) {
+            return parseInt(d.date_mday)
+        });
+        var minCreated = d3.min(nov, function (d) {
+            return parseInt(d.date_mday)
+        });
+
+
+        var x = d3.scale.linear()
+                .domain([minCreated, maxCreated])
+                .range([0, widthnov]);
+        var contextAxis = d3.svg.axis()
+                .scale(x).ticks(21)
+                .orient("bottom").
+                tickPadding(0);
+
+        var brush = d3.svg.brush()
+                .x(x).extent([maxCreated - 1, maxCreated]).on("brushend", brushended)
+
+        novBrush.append("rect")
+                .attr("class", "grid-background")
+                .attr("width", widthnov)
+                .attr("height", heightnov);
+        novBrush.append("g")
+                .attr("class", "x grid")
+                .attr("transform", "translate(" + ( 0 ) + "," + heightnov + ")")
+                .call(d3.svg.axis()
+                        .scale(x)
+                        .orient("bottom")
+                        .ticks(21).tickFormat("")
+                        .tickSize(-heightnov).tickPadding(5)
+        ).selectAll(".tick")
+                .classed("minor", function (d) {
+                    return d;
+                })
+
+
+        novBrush.append("g").attr("class", "x axis")
+                .attr("transform", "translate(0," + heightnov + ")").
+                call(contextAxis)
+
+        var gBrush = novBrush.append("g")
+                .attr("class", "brush")
+                .call(brush)
+                .call(brush.event);
+
+        gBrush.selectAll("rect")
+                .attr("height", heightnov);
+        var itoalCount = 0;
+        var filtered = nov.filter(function (d) {
+
+            borough.forEach(function (value) {
+                var name = value.Name;
+                if (value.Name == d.Borough && (d.date_mday == maxCreated - 1 || d.date_mday == maxCreated)) {
+                    value.Count = value.Count + parseInt(d.count);
+                }
+            });
+
+            return d.date_mday == minCreated || d.date_mday == maxCreated - 1
+        })
+
+        for (var key in borough) {
+            d3.select("#" + borough[key].Name.replace(" ", "")).text(borough[key].Count);
+            itoalCount = itoalCount + borough[key].Count;
+        }
+        d3.select("#totalCount").text("Total : " + itoalCount.toString());
+        var openCaseCount = 0;
+        for (var value in novOpenCase) {
+            if (parseInt(novOpenCase[value].date_mday) == maxCreated || parseInt(novOpenCase[value].date_mday == maxCreated - 1)) {
+                openCaseCount = openCaseCount + parseInt(novOpenCase[value].opencount);
+            }
+        }
+
+        d3.select("#openCase").text("Open Case :" + openCaseCount.toString());
+
+        CreateUpdateDoughNut(borough, itoalCount);
+        resetborough=borough;
+        resetTotlal=itoalCount;
+
+        startday = maxCreated - 1;
+        endday = maxCreated;
+        topSerivceComplain("All");
+        AgencyReceiveMostComplain("All")
+        AgencyMaxAverageTime("All")
+        AgencyMinAverageTime("All")
+        function brushended() {
+            if (!d3.event.sourceEvent) return;
+            var extent0 = brush.extent();
+
+            extent1 = extent0
+            if (extent1[0] <= extent1[1]) {
+                extent1[0] = Math.floor(extent0[0]);
+                extent1[1] = Math.ceil(extent0[1]);
+            }
+
+            d3.select(this).transition()
+                    .call(brush.extent(extent1))
+                    .call(brush.event);
+            var borough = [
+                {Name: "BRONX", Count: 0, Latitude: 40.87740813, Longitude: -73.88526915}
+                ,
+                {Name: "BROOKLYN", Count: 0, Latitude: 40.62768397, Longitude: -73.96075748},
+                {Name: "MANHATTAN", Count: 0, Latitude: 40.79753455, Longitude: -73.95975127},
+                {Name: "QUEENS", Count: 0, Latitude: 40.70861121, Longitude: -73.82885164, Drawn: 0},
+                {Name: "STATEN ISLAND", Count: 0, Latitude: 40.581447093379374, Longitude: -74.15292236414053}
+            ];
+            var filtereddata = nov.filter(function (d) {
+
+                borough.forEach(function (value) {
+                    var name = value.Name;
+                    if (value.Name == d.Borough && (d.date_mday >= extent1[0] && d.date_mday <= extent1[1])) {
+                        value.Count = value.Count + parseInt(d.count);
+                    }
+                });
+                return d.date_mday >= extent1[0] && d.date_mday <= extent1[1]
+            })
+            var iCount = 0;
+            for (var key in borough) {
+                d3.select("#" + borough[key].Name.replace(" ", "")).text(borough[key].Count);
+                iCount = iCount + borough[key].Count;
+            }
+            d3.select("#totalCount").text("Total : " + iCount);
+
+            var openCaseCount = 0;
+            for (var value in novOpenCase) {
+                if (parseInt(novOpenCase[value].date_mday) >= extent1[0] && parseInt(novOpenCase[value].date_mday) <= extent1[1]) {
+                    openCaseCount = openCaseCount + parseInt(novOpenCase[value].opencount);
+                }
+            }
+
+            d3.select("#openCase").text("Open Case :" + openCaseCount.toString());
+
+            CreateUpdateDoughNut(borough, iCount);
+            startday = extent1[0];
+            endday = extent1[1];
+            topSerivceComplain("All");
+            AgencyReceiveMostComplain("All")
+            AgencyMaxAverageTime("All")
+            AgencyMinAverageTime("All")
+        }
+
+    })
+}
+//on click
+function CreateUpdateBarNov(Allborough, selectedBorough) {
+
+    d3.csv('/311DataVisualization/d3-311/boroughBarChart.csv', function (err, novBCData) {
+
+        var filterData = novBCData.filter(function (d) {
+
+            if (d.Borough == selectedBorough.Name) {
+                return d;
+            }
+        })
+        // sort the data
+        filterData.sort(function (a, b) {
+            return parseInt(a.date_mday) - parseInt(b.date_mday)
+        })
+        var total = filterData.reduce(function (prev, b) {
+            return prev + parseInt(b.count);
+        }, 0);
+
+        var xBarNov = d3.scale.ordinal()
+                .rangeRoundBands([0, wDN * 2], .5);
+
+        var yBarNov = d3.scale.linear()
+                .range([hDN, 0]);
+
+        var xAxisbar = d3.svg.axis()
+                .scale(xBarNov)
+                .orient("bottom");
+
+        var yAxisbar = d3.svg.axis()
+                .scale(yBarNov)
+                .orient("left")
+                .ticks(10, "%");
+
+        barNov.select("g").remove();
+        var svgBar = barNov
+                .append("g")
+                .attr("transform", "translate(" + wDN /4 + "," + wDN + ")");
+
+        xBarNov.domain(filterData.map(function (d) {
+            return d.date_mday;
+        }));
+        yBarNov.domain([0, d3.max(filterData, function (d) {
+            return  parseInt(d.count) / total;
+        })]);
+
+        svgBar.append("g")
+                .attr("class", "x baraxis")
+                .attr("transform", "translate(0," + hDN + ")")
+                .call(xAxisbar);
+
+        svgBar.append("g")
+                .attr("class", "y baraxis")
+                .call(yAxisbar)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Total %");
+
+        svgBar.selectAll(".bar")
+                .data(filterData)
+                .enter().append("rect").transition().duration(1000).ease("linear")
+                .attr("class", "bar")
+                .attr("x", function (d) {
+                    return xBarNov(d.date_mday);
+                })
+                .attr("width", xBarNov.rangeBand())
+                .attr("y", function (d) {
+                    return yBarNov(d.count / total);
+                })
+                .attr("height", function (d) {
+                    return hDN - yBarNov(d.count / total);
+                })
+                .style("fill", function (d) {
+                    return  mapColor[BoroughName.indexOf(d.Borough)]
+                })
+        ;
+
+    });
+
+}
+function monthlineChart() {
+    var margin = {top: 20, right: 55, bottom: 30, left: 80},
+            width = 400 - margin.left - margin.right,
+            height = 200 - margin.top - margin.bottom;
+    var x = d3.scale.ordinal()
+            .rangeRoundBands([0, width], .1);
+    var y = d3.scale.linear()
+            .rangeRound([height, 0]);
+    var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+    var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
+    var line = d3.svg.line()
+            .interpolate("cardinal")
+            .x(function (d) {
+                return x(d.label) + x.rangeBand() / 2;
+            })
+            .y(function (d) {
+                return y(d.value);
+            });
+    var color = d3.scale.ordinal()
+            .range(["rgba(229, 197, 76, 1)",
+                "rgba(200, 115, 41, 1)",
+                "rgba(111, 142, 162, 1)",
+                "rgba(154, 162, 55, 1)",
+                "rgba(166, 113, 135, 1)"]);
+    var svg = d3.select("#monthlinechart").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    d3.csv("/311DataVisualization/d3-311/MonthlyChart.csv", function (error, data) {
+        var labelVar = 'quarter';
+        var varNames = d3.keys(data[0]).filter(function (key) {
+            return key !== labelVar;
+        });
+        color.domain(varNames);
+        var seriesData = varNames.map(function (name) {
+            return {
+                name: name,
+                values: data.map(function (d) {
+                    return {name: name, label: d[labelVar], value: +d[name]};
+                })
+            };
+        });
+        x.domain(data.map(function (d) {
+            return d.quarter;
+        }));
+        y.domain([
+            d3.min(seriesData, function (c) {
+                return d3.min(c.values, function (d) {
+                    return d.value;
+                });
+            }),
+            d3.max(seriesData, function (c) {
+                return d3.max(c.values, function (d) {
+                    return d.value;
+                });
+            })
+        ]);
+        svg.append("g")
+                .attr("class", "x axisline")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+        svg.append("g")
+                .attr("class", "y axisline")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Service Requests");
+        var series = svg.selectAll(".series")
+                .data(seriesData)
+                .enter().append("g")
+                .attr("class", "series");
+        series.append("path")
+                .attr("class", "line")
+                .attr("d", function (d) {
+                    return line(d.values);
+                })
+                .style("stroke", function (d) {
+                    return color(d.name);
+                })
+                .style("stroke-width", "4px")
+                .style("fill", "none")
+        series.selectAll(".point")
+                .data(function (d) {
+                    return d.values;
+                })
+                .enter().append("circle")
+                .attr("class", "point")
+                .attr("cx", function (d) {
+                    return x(d.label) + x.rangeBand() / 2;
+                })
+                .attr("cy", function (d) {
+                    return y(d.value);
+                })
+                .attr("r", "5px")
+                .style("fill", function (d) {
+                    return color(d.name);
+                })
+                .style("stroke", "grey")
+                .style("stroke-width", "2px")
+                .on("mouseover", function (d) {
+                    showPopover.call(this, d);
+                })
+                .on("mouseout", function (d) {
+                    removePopovers();
+                })
+        var legend = svg.selectAll(".legend")
+                .data(varNames.slice().reverse())
+                .enter().append("g")
+                .attr("class", "legend")
+                .attr("transform", function (d, i) {
+                    return "translate(55," + i * 20 + ")";
+                });
+        legend.append("rect")
+                .attr("x", width - 5)
+                .attr("width", 10)
+                .attr("height", 10)
+                .style("fill", color)
+                .style("stroke", "grey");
+        legend.append("text")
+                .attr("x", width - 8)
+                .attr("y", 6)
+                .attr("dy", ".35em")
+                .style("text-anchor", "end")
+                .style("font-size", ".8em")
+                .text(function (d) {
+                    return d;
+                });
+        function removePopovers() {
+            d3.select("#tooltip").classed("hidden", true);
+        }
+
+        function showPopover(d) {
+
+            //Get this bar's x/y values, then augment for the tooltip
+            var xPosition = parseFloat(d3.select(this).attr("cx")) + 50;
+            var yPosition = parseFloat(d3.select(this).attr("cy")) + 54;
+            //console.log(xPosition);
+            //Create the tooltip label
+            d3.select("#tooltip")
+                    .style("left", xPosition +40+ "px")
+                    .style("top", yPosition-20 + "px")
+                    .select("#value")
+                    .text(d.name + " " + d.label + " " + d3.format(",")(d.value ? d.value : d.y1 - d.y0));
+
+            //Show the tooltip
+            d3.select("#tooltip").classed("hidden", false);
+
+
+        }
+    });
+}
+function heatMap() {
+    d3.tsv("Day_Hour_Count.txt",
+            function (d) {
+                return {
+                    day: +parseInt(d.day),
+                    hour: +parseInt(d.hour),
+                    value: +Math.log(parseInt(d.value))
+                };
+            },
+            function (error, data) {
+                var margin = { top: 00, right: 10, bottom: 00, left: 50 }
+                var width = 550 - margin.left - margin.right,
+                        height = 10,//; - margin.top - margin.bottom,
+                        gridSize = Math.floor(width / 24) ,
+                        legendElementWidth = gridSize * 2 ,
+                        buckets = 9,
+                        colors = ["#ffffd9", "#edf8b1", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#225ea8", "#253494", "#081d58"], // alternatively colorbrewer.YlGnBu[9]
+                        days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+                        times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12a", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12p"];
+
+                var colorScale = d3.scale.quantile()
+                        .domain([0, buckets - 1, d3.max(data, function (d) {
+                            return d.value;
+                        })])
+                        .range(colors);
+
+                var svg = d3.select("#heatMapChart").append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                var dayLabels = svg.selectAll(".dayLabel")
+                        .data(days)
+                        .enter().append("text")
+                        .text(function (d) {
+                            return d;
+                        })
+                        .attr("x", 0)
+                        .attr("y", function (d, i) {
+                            return i * gridSize;
+                        })
+                        .style("text-anchor", "end")
+                        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+                        .attr("class", function (d, i) {
+                            return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis");
+                        });
+
+                var timeLabels = svg.selectAll(".timeLabel")
+                        .data(times)
+                        .enter().append("text")
+                        .text(function (d) {
+                            return d;
+                        })
+                        .attr("x", function (d, i) {
+                            return i * gridSize;
+                        })
+                        .attr("y", 0)
+                        .style("text-anchor", "middle")
+                        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                        .attr("class", function (d, i) {
+                            return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis");
+                        });
+
+                var heatMap = svg.selectAll(".hour")
+                        .data(data)
+                        .enter().append("rect")
+                        .attr("x", function (d) {
+                            return (d.hour - 1) * gridSize;
+                        })
+                        .attr("y", function (d) {
+                            return (d.day - 1) * gridSize;
+                        })
+                        .attr("rx", 4)
+                        .attr("ry", 4)
+                        .attr("class", "hour bordered")
+                        .attr("width", gridSize)
+                        .attr("height", gridSize)
+                        .style("fill", colors[0]);
+
+                heatMap.transition().duration(1000)
+                        .style("fill", function (d) {
+                            return colorScale(d.value);
+                        });
+
+                heatMap.append("title").text(function (d) {
+                    return d.value;
+                });
+
+                var legend = svg.selectAll(".legend")
+                        .data([0].concat(colorScale.quantiles()), function (d) {
+                            return d;
+                        })
+                        .enter().append("g")
+                        .attr("class", "legend");
+
+                legend.append("rect")
+                        .attr("x", function (d, i) {
+                            return legendElementWidth * i;
+                        })
+                        .attr("y", height - 60)
+                        .attr("width", legendElementWidth)
+                        .attr("height", gridSize / 2)
+                        .style("fill", function (d, i) {
+                            return colors[i];
+                        });
+
+                legend.append("text")
+                        .attr("class", "mono")
+                        .text(function (d) {
+                            return "≥ " + Math.round(d);
+                        })
+                        .attr("x", function (d, i) {
+                            return legendElementWidth * i;
+                        })
+                        .attr("y", height + gridSize - 60);
+            });
+}
+//var wDNComplain = 200;
+//var hDNComplain = 150;
+//var barNovComplain = d3.select("#serviceCompalin").append("svg").attr("width", wDNComplain).attr("height", hDNComplain);
+
+var bar_width = 250,
+        bar_height = 20.00;
+var height = bar_height * 10;
+var left_width = 80.00;
+var gap = 2;
+var barNovComplain = d3.select("#serviceCompalin")
+        .append('svg')
+        .attr('class', 'agchart').style("background","transparent") //mapColor[borough]
+        .attr('width', parseFloat(left_width + bar_width + 40))
+        .attr('height', parseFloat((bar_height + gap * 2) * 5 + 30));
+
+function topSerivceComplain(selectedBorough) {
+    d3.csv('/311DataVisualization/d3-311/AgencyComplainType.csv', function (err, serviceData) {
+        dataSet = [];
+        if (selectedBorough != "All") {
+            var serviceData = serviceData.filter(function (d) {
+
+                if (d.Borough == selectedBorough.Name) {
+                    return d;
+                }
+            })
+        }
+        serviceData.forEach(function (value) {
+            var flag = true;
+            dataSet.forEach(function (valueds) {
+                if (valueds.key == value.ComplaintType && value.date_mday >= parseInt(startday) && value.date_mday <= parseInt(endday)) {
+                    valueds.count += parseInt(value.count);
+                    flag = false;
+                }
+            })
+            if (flag && value.date_mday >= parseInt(startday) && value.date_mday <= parseInt(endday)) {
+                dataSet.push({
+                    key: value.ComplaintType,
+                    count: parseInt(value.count)
+
+                })
+            }
+        })
+
+        var total = dataSet.reduce(function (prev, b) {
+            return prev + parseInt(b.count);
+        }, 0);
+
+        /* dataset.forEach(function(valueds){
+         valueds.count= valueds.count/total*100
+         })*/
+        dataSet.sort(function (a, b) {
+            return parseInt(b.count) - parseInt(a.count)
+        })
+        dataSet = dataSet.splice(0, 5).filter(function(d,i){
+            d.count=parseFloat(d.count)+(i/100);
+            return d;
+        });
+        //console.log(filterdata);
+        var AgencyName= [];
+        var AgencyValue=[];
+        for(var i in dataSet){
+            AgencyName.push(dataSet[i].key)
+            AgencyValue.push(parseFloat((dataSet[i].count/total*100)).toFixed(2))
+        }
+
+       var maxval=AgencyValue.reduce(function(a,b) { return Math.max(a,b); });
+
+        /* step 2 */
+        var x, y;
+        x = d3.scale.linear()
+                .domain([0.00,maxval])
+                .range([0.00, 250]);
+
+
+        // redefine y for adjusting the gap
+        y = d3.scale.ordinal()
+                .domain(AgencyValue)
+                .rangeBands([0, parseFloat((bar_height + 2 * gap) * AgencyName.length)]);
+
+        barNovComplain.select("g").remove();
+
+        var svgbar=barNovComplain.append("g")
+                .attr("transform", "translate(10.00, 20.00)");
+        svgbar.selectAll("line")
+                .data(x.ticks(10.00))
+                .enter().append("line")
+                .attr("x1", function(d) { return x(d) + left_width; })
+                .attr("x2", function(d) { return parseFloat(x(d) + left_width) })
+                .attr("y1", 0)
+                .attr("y2", (bar_height + gap * 2) * AgencyName.length);
+
+        svgbar.selectAll(".rule")
+                .data(x.ticks(10))
+                .enter().append("text")
+                .attr("class", "rule")
+                .attr("x", function(d) { return x(d) + left_width; })
+                .attr("y", 0)
+                .attr("dy", -6)
+                .attr("text-anchor", "middle")
+                .attr("font-size", 10)
+                .text(String);
+
+        svgbar.selectAll("rect")
+                .data(AgencyValue)
+                .enter().append("rect")
+                .attr("x", left_width)
+                .attr("y", function(d) { return y(d) + gap; })
+                .attr("width", x)
+                .attr("height", bar_height).style("fill", function (d) {
+                    if (selectedBorough != "All")
+                        return  mapColor[BoroughName.indexOf(selectedBorough.Name)]
+                });
+
+        svgbar.selectAll("text.score")
+                .data(AgencyValue)
+                .enter().append("text")
+                .attr("x", function(d) { return x(d) + left_width+55; })
+                .attr("y", function(d, i){ return y(d) + y.rangeBand()/2; } )
+                .attr("dx", -5)
+                .attr("dy", ".36em")
+                .attr("text-anchor", "end")
+                .attr('class', 'score')
+                .text(function(d) {
+                    return d + "%";
+                });
+
+        svgbar.selectAll("text.name")
+                .data(AgencyName)
+                .enter().append("text")
+                .attr("x", 0)
+                .attr("y", function(d, i){ return y(AgencyValue[i]) + y.rangeBand()/2; } )
+                .attr("dy", ".36em")
+                .attr("text-anchor", "middle")
+                .attr('class', 'name')
+                .text(String).style("font-size",".8em");
+       /* var xBarNov = d3.scale.ordinal()
+                .rangeRoundBands([0, wDN * 2], .5);
+
+        var yBarNov = d3.scale.linear()
+                .range([hDN, 0]);
+
+        var xAxisbar = d3.svg.axis()
+                .scale(xBarNov)
+                .orient("bottom");
+
+        var yAxisbar = d3.svg.axis()
+                .scale(yBarNov)
+                .orient("left")
+                .ticks(10, "%");
+        barNovComplain.select("g").remove();
+        var svgBar = barNovComplain
+                .append("g")
+                .attr("transform", "translate(" + wDN * 2 + "," + wDN + ")");
+
+        xBarNov.domain(filterdata.map(function (d) {
+            return d.key;
+        }));
+        yBarNov.domain([0, d3.max(filterdata, function (d) {
+            return  parseInt(d.count) / total;
+        })]);
+
+        svgBar.append("g")
+                .attr("class", "x baraxis")
+                .attr("transform", "translate(0," + hDN + ")")
+                .call(xAxisbar).selectAll("text")
+                .style("text-anchor", "end")
+                .attr("dx", "-.8em")
+                .attr("dy", ".15em")
+                .attr("transform", function (d) {
+                    return "rotate(-65)"
+                });
+
+        svgBar.append("g")
+                .attr("class", "y baraxis")
+                .call(yAxisbar)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Complain %");
+
+        svgBar.selectAll(".bar")
+                .data(filterdata)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", function (d) {
+                    return xBarNov(d.key);
+                })
+                .attr("width", xBarNov.rangeBand())
+                .attr("y", function (d) {
+                    return yBarNov(d.count / total);
+                })
+                .attr("height", function (d) {
+                    return hDN - yBarNov(d.count / total);
+                })
+                .style("fill", function (d) {
+                    if (selectedBorough != "All")
+                        return  mapColor[BoroughName.indexOf(selectedBorough.Name)]
+                });*/
+
+    })
+}
+
+var bar_width = 250,
+        bar_height = 20.00;
+var height = bar_height * 10;
+var left_width = 80.00;
+var gap = 2;
+var chartAgencyReceiveMostComplain = d3.select("#AgencyReceiveMostComplain")
+        .append('svg')
+        .attr('class', 'agchart').style("background","transparent") //mapColor[borough]
+        .attr('width', parseFloat(left_width + bar_width + 40))
+        .attr('height', parseFloat((bar_height + gap * 2) * 5 + 30));
+
+function AgencyReceiveMostComplain(selectedBorough){
+    d3.csv('/311DataVisualization/d3-311/AgencyBoroughCount.csv',function(err,agencyDataSet){
+
+        var dataSet = [];
+        if (selectedBorough != "All") {
+            var agencyDataSet = agencyDataSet.filter(function (d) {
+
+                if (d.Borough == selectedBorough.Name) {
+                    return d;
+                }
+            })
+        }
+        agencyDataSet.forEach(function (value) {
+            var flag = true;
+            dataSet.forEach(function (valueds) {
+                if (valueds.key == value.Agency && value.date_mday >= parseInt(startday) && value.date_mday <= parseInt(endday)) {
+                    valueds.count += parseInt(value.count);
+                    flag = false;
+                }
+            })
+            if (flag && value.date_mday >= parseInt(startday) && value.date_mday <= parseInt(endday)) {
+                dataSet.push({
+                    key: value.Agency,
+                    count: parseInt(value.count)
+
+                })
+            }
+        })
+        dataSet.sort(function(a,b){
+            return  parseInt(b.count)-parseInt(a.count)
+        })
+        var total = dataSet.reduce(function(prev, b) {
+            return prev + parseInt(b.count);
+        },0);
+        //get the top 5
+        dataSet= dataSet.slice(0,5).filter(function(d,i){
+            d.count=parseFloat(d.count)+(i/100);
+            return d;
+        });
+        var AgencyName= [];
+        var AgencyValue=[];
+        for(var i in dataSet){
+            AgencyName.push(dataSet[i].key)
+            AgencyValue.push(parseFloat((dataSet[i].count/total*100)).toFixed(2))
+        }
+
+        maxval=AgencyValue.reduce(function(a,b) { return Math.max(a,b); })+10;
+
+        /* step 2 */
+        var x, y;
+        x = d3.scale.linear()
+                .domain([0.00,maxval])
+                .range([0.00, 250.99]);
+
+
+        // redefine y for adjusting the gap
+        y = d3.scale.ordinal()
+                .domain(AgencyValue)
+                .rangeBands([0, parseFloat((bar_height + 2 * gap) * AgencyName.length)]);
+
+        chartAgencyReceiveMostComplain.select("g").remove();
+
+        svgbar=chartAgencyReceiveMostComplain.append("g")
+                .attr("transform", "translate(10.00, 20.00)");
+        svgbar.selectAll("line")
+                .data(x.ticks(10.00))
+                .enter().append("line")
+                .attr("x1", function(d) { return x(d) + left_width; })
+                .attr("x2", function(d) { return parseFloat(x(d) + left_width) })
+                .attr("y1", 0)
+                .attr("y2", (bar_height + gap * 2) * AgencyName.length);
+
+        svgbar.selectAll(".rule")
+                .data(x.ticks(10))
+                .enter().append("text")
+                .attr("class", "rule")
+                .attr("x", function(d) { return x(d) + left_width; })
+                .attr("y", 0)
+                .attr("dy", -6)
+                .attr("text-anchor", "middle")
+                .attr("font-size", 10)
+                .text(String);
+
+        svgbar.selectAll("rect")
+                .data(AgencyValue)
+                .enter().append("rect")
+                .attr("x", left_width)
+                .attr("y", function(d) { return y(d) + gap; })
+                .attr("width", x)
+                .attr("height", bar_height).style("fill", function (d) {
+                    if (selectedBorough != "All")
+                        return  mapColor[BoroughName.indexOf(selectedBorough.Name)]
+                });
+
+        svgbar.selectAll("text.score")
+                .data(AgencyValue)
+                .enter().append("text")
+                .attr("x", function(d) { return x(d) + left_width+55; })
+                .attr("y", function(d, i){ return y(d) + y.rangeBand()/2; } )
+                .attr("dx", -5)
+                .attr("dy", ".36em")
+                .attr("text-anchor", "end")
+                .attr('class', 'score')
+                .text(function(d) {
+                    return d + "%";
+                });
+
+        svgbar.selectAll("text.name")
+                .data(AgencyName)
+                .enter().append("text")
+                .attr("x", left_width / 2)
+                .attr("y", function(d, i){ return y(AgencyValue[i]) + y.rangeBand()/2; } )
+                .attr("dy", ".36em")
+                .attr("text-anchor", "middle")
+                .attr('class', 'name')
+                .text(String);
+
+
+        //
+    })
+}
+
+var chartMaxTime = d3.select("#AgencyMaxTime")
+        .append('svg')
+        .attr('class', 'agchart').style("background","transparent") //mapColor[borough]
+        .attr('width', parseFloat(left_width + bar_width + 40))
+        .attr('height', parseFloat((bar_height + gap * 2) * 5 + 30))
+
+function AgencyMaxAverageTime(selectedBorough){
+    d3.csv('/311DataVisualization/d3-311/AverageServiceClosetime.csv',function(err,agencyDataSet){
+
+        var dataSet = [];
+        if (selectedBorough != "All") {
+            var agencyDataSet = agencyDataSet.filter(function (d) {
+
+                if (d.Borough == selectedBorough.Name) {
+                    return d;
+                }
+            })
+        }
+        agencyDataSet.forEach(function (value) {
+            var flag = true;
+            dataSet.forEach(function (valueds) {
+                if (valueds.key == value.Agency && value.date_mday >= parseInt(startday) && value.date_mday <= parseInt(endday)) {
+                    valueds.count += parseInt(value.AvgTimeMin);
+                    valueds.number++;
+                    flag = false;
+                }
+            })
+            if (flag && value.date_mday >= parseInt(startday) && value.date_mday <= parseInt(endday)) {
+                dataSet.push({
+                    key: value.Agency,
+                    count: parseInt(value.AvgTimeMin),
+                    number:1
+                })
+            }
+        })
+        dataSet.forEach(function (valueds){
+            valueds.count=valueds.count/valueds.number
+        })
+        var total = dataSet.reduce(function(prev, b) {
+            return prev + parseInt(b.count);
+        },0);
+        dataSet.sort(function(a,b){
+            return  parseInt(b.count)-parseInt(a.count)
+        })
+
+        //get the top 5
+        dataSet= dataSet.slice(0,5).filter(function(d,i){
+            d.count=parseFloat(d.count)+(i/100);
+            return d;
+        });
+        var AgencyName= [];
+        var AgencyValue=[];
+        for(var i in dataSet){
+            AgencyName.push(dataSet[i].key)
+            AgencyValue.push(parseFloat((dataSet[i].count)).toFixed(2))
+        }
+
+
+        /* step 2 */
+        maxval=AgencyValue.reduce(function(a,b) { return Math.max(a,b); })+10;
+
+        var x, y;
+        x = d3.scale.linear()
+                .domain([0.00,maxval])
+                .range([0.00, 250.99]);
+
+        var left_width = 80.00;
+        var gap = 2;
+        // redefine y for adjusting the gap
+        y = d3.scale.ordinal()
+                .domain(AgencyValue)
+                .rangeBands([0, parseFloat((bar_height + 2 * gap) * AgencyName.length)]);
+        chartMaxTime.select("g").remove();
+
+        var svgbar=chartMaxTime.append("g")
+                .attr("transform", "translate(10.00, 20.00)");
+
+        svgbar.selectAll("line")
+                .data(x.ticks(10.00))
+                .enter().append("line")
+                .attr("x1", function(d) { return x(d) + left_width; })
+                .attr("x2", function(d) { return parseFloat(x(d) + left_width) })
+                .attr("y1", 0)
+                .attr("y2", (bar_height + gap * 2) * AgencyName.length);
+
+        svgbar.selectAll(".rule")
+                .data(x.ticks(10))
+                .enter().append("text")
+                .attr("class", "rule")
+                .attr("x", function(d) { return x(d) + left_width; })
+                .attr("y", 0)
+                .attr("dy", -6)
+                .attr("text-anchor", "middle")
+                .attr("font-size", 10)
+                .text(String);
+
+        svgbar.selectAll("rect")
+                .data(AgencyValue)
+                .enter().append("rect")
+                .attr("x", left_width)
+                .attr("y", function(d) { return y(d) + gap; })
+                .attr("width", x)
+                .attr("height", bar_height).style("fill", function (d) {
+                    if (selectedBorough != "All")
+                        return  mapColor[BoroughName.indexOf(selectedBorough.Name)]
+                });
+
+        svgbar.selectAll("text.score")
+                .data(AgencyValue)
+                .enter().append("text")
+                .attr("x", function(d) { return x(d) + left_width+60; })
+                .attr("y", function(d, i){ return y(d) + y.rangeBand()/2; } )
+                .attr("dx", -5)
+                .attr("dy", ".36em")
+                .attr("text-anchor", "end")
+                .attr('class', 'score')
+                .text(function(d) {
+                    return d + "hrs";
+                });
+
+        svgbar.selectAll("text.name")
+                .data(AgencyName)
+                .enter().append("text")
+                .attr("x", left_width / 2)
+                .attr("y", function(d, i){ return y(AgencyValue[i]) + y.rangeBand()/2; } )
+                .attr("dy", ".36em")
+                .attr("text-anchor", "middle")
+                .attr('class', 'name')
+                .text(String);
+
+
+        //
+    })
+}
+
+var chartMinTime = d3.select("#AgencyMinTime")
+        .append('svg')
+        .attr('class', 'agchart').style("background","transparent") //mapColor[borough]
+        .attr('width', parseFloat(left_width + bar_width + 40))
+        .attr('height', parseFloat((bar_height + gap * 2) * 5 + 30))
+function AgencyMinAverageTime(selectedBorough){
+    d3.csv('/311DataVisualization/d3-311/AverageServiceClosetime.csv',function(err,agencyDataSet){
+
+        var dataSet = [];
+        if (selectedBorough != "All") {
+            var agencyDataSet = agencyDataSet.filter(function (d) {
+
+                if (d.Borough == selectedBorough.Name) {
+                    return d;
+                }
+            })
+        }
+        agencyDataSet.forEach(function (value) {
+            var flag = true;
+            dataSet.forEach(function (valueds) {
+                if (valueds.key == value.Agency && value.date_mday >= parseInt(startday) && value.date_mday <= parseInt(endday)) {
+                    valueds.count += parseInt(value.AvgTimeMin);
+                    valueds.number++;
+                    flag = false;
+                }
+            })
+            if (flag && value.date_mday >= parseInt(startday) && value.date_mday <= parseInt(endday)) {
+                dataSet.push({
+                    key: value.Agency,
+                    count: parseInt(value.AvgTimeMin),
+                    number:1
+                })
+            }
+        })
+        dataSet.forEach(function (valueds){
+            valueds.count=parseFloat(valueds.count/valueds.number).toFixed(2)
+        })
+        var total = dataSet.reduce(function(prev, b) {
+            return prev + parseFloat(b.count);
+        },0);
+         dataSet.sort(function(a,b){
+            return  parseFloat(a.count)-parseFloat(b.count)
+        })
+
+       var filterdata= dataSet.filter(function(d){
+            return parseFloat(d.count)>0.0;
+        });
+
+
+        //get the top 5 + to evenly distribute
+        var data= filterdata.slice(0,5).filter(function(d,i){
+            d.count=parseFloat(d.count)+(i/100);
+            return d;
+        });
+        var AgencyName= [];
+        var AgencyValue=[];
+        for(var i in data){
+            AgencyName.push(data[i].key)
+            AgencyValue.push(parseFloat((data[i].count)).toFixed(2))
+        }
+
+
+        /* step 2 */
+        maxval=AgencyValue.reduce(function(a,b) { return Math.max(a,b); });
+
+        var x, y;
+        x = d3.scale.linear()
+                .domain([0.00,maxval])
+                .range([0.00, 250.99]);
+
+        var left_width = 80.00;
+        var gap = 2;
+        // redefine y for adjusting the gap
+        y = d3.scale.ordinal()
+                .domain(AgencyValue)
+                .rangeBands([0, parseFloat((bar_height + 2 * gap) * AgencyName.length)]);
+        chartMinTime.select("g").remove();
+
+        var svgbar=chartMinTime.append("g")
+                .attr("transform", "translate(10.00, 20.00)");
+
+        svgbar.selectAll("line")
+                .data(x.ticks(10.00))
+                .enter().append("line")
+                .attr("x1", function(d) { return x(d) + left_width; })
+                .attr("x2", function(d) { return parseFloat(x(d) + left_width) })
+                .attr("y1", 0)
+                .attr("y2", (bar_height + gap * 2) * AgencyName.length);
+
+        svgbar.selectAll(".rule")
+                .data(x.ticks(10))
+                .enter().append("text")
+                .attr("class", "rule")
+                .attr("x", function(d) { return x(d) + left_width; })
+                .attr("y", 0)
+                .attr("dy", -6)
+                .attr("text-anchor", "middle")
+                .attr("font-size", 10)
+                .text(String);
+
+        svgbar.selectAll("rect")
+                .data(AgencyValue)
+                .enter().append("rect")
+                .attr("x", left_width)
+                .attr("y", function(d,i) { return y(d) + gap; })
+                .attr("width", x)
+                .attr("height", bar_height).style("fill", function (d) {
+                    if (selectedBorough != "All")
+                        return  mapColor[BoroughName.indexOf(selectedBorough.Name)]
+                });
+
+        svgbar.selectAll("text.score")
+                .data(AgencyValue)
+                .enter().append("text")
+                .attr("x", function(d) { return x(d) + left_width+55; })
+                .attr("y", function(d, i){ return y(d) + y.rangeBand()/2; } )
+                .attr("dx", -5)
+                .attr("dy", ".36em")
+                .attr("text-anchor", "end")
+                .attr('class', 'score')
+                .text(function(d) {
+                    return d + "hrs";
+                });
+
+        svgbar.selectAll("text.name")
+                .data(AgencyName)
+                .enter().append("text")
+                .attr("x", left_width / 2)
+                .attr("y", function(d, i){ return y(AgencyValue[i]) + y.rangeBand()/2; } )
+                .attr("dy", ".36em")
+                .attr("text-anchor", "middle")
+                .attr('class', 'name')
+                .text(String);
+
+
+        //
+    })
+}
+
+heatMap();
+monthlineChart();
+createBrush();
+//open case
+createStackChart();
+
+</script>
+</body>
+</html>

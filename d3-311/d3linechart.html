@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+
+    <style>
+        body {
+            font: 9px sans-serif;
+            color: #121401;
+        }
+        .axis path,
+          .axis line {
+              fill: none;
+              stroke: #121401;
+              stroke-width: 2px;
+              shape-rendering: crispEdges;
+          }
+        #tooltip {
+            position: absolute;
+            width: 130px;
+            height: auto;
+            padding: 10px;
+            background-color: white;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            border-radius: 10px;
+            -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+        }
+
+        #tooltip.hidden {
+            display: none;
+        }
+
+        #tooltip p {
+            margin: 0;
+            font-family: sans-serif;
+            font-size: 16px;
+            line-height: 20px;
+        }
+        .baraxis path,
+        .baraxis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+        .baraxis {
+            font: 10px sans-serif;
+        }
+        .bar {
+            fill: rgba(8, 29, 88, 1);
+        }
+
+
+        .agchart {
+            background: #b0e0f8;
+            margin: 5px;
+        }
+
+        .agchart rect {
+            stroke: white;
+            fill: steelblue;
+        }
+
+        .agchart text {
+            fill: black;
+        }
+
+        .agchart text.name {
+            fill: #000;
+        }
+
+        .agchart line {
+            stroke: #c1c1c1;
+        }
+
+        .agchart .rule {
+            fill: #000;
+        }
+    </style>
+</head>
+<body>
+<h2 style="padding-left:60px;">Service requests</h2>
+<script type="text/javascript" src="/311DataVisualization/d3/d3.js"></script>
+<script type="text/javascript" src="/311DataVisualization/d3/jquery-1.7.1.min.js"></script>
+<div id="tooltip" class="hidden">
+    <p><strong></strong><span id="value">100</span></p>
+</div>
+<div id="monthlinechart">
+</div>
+<div id="novOpenCase"></div>
+
+<div id="serviceCompalin"></div>
+<div id="Agencykey"></div>
+
+<script>
+    var margin = {top: 20, right: 55, bottom: 30, left: 40},
+            width  = 400 - margin.left - margin.right,
+            height = 300  - margin.top  - margin.bottom;
+    var x = d3.scale.ordinal()
+            .rangeRoundBands([0, width], .1);
+    var y = d3.scale.linear()
+            .rangeRound([height, 0]);
+    var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+    var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
+    var line = d3.svg.line()
+            .interpolate("cardinal")
+            .x(function (d) { return x(d.label) + x.rangeBand() / 2; })
+            .y(function (d) { return y(d.value); });
+    var color = d3.scale.ordinal()
+            .range(["rgba(229, 197, 76, 1)",
+                "rgba(200, 115, 41, 1)",
+                "rgba(111, 142, 162, 1)",
+                "rgba(154, 162, 55, 1)",
+                "rgba(166, 113, 135, 1)"]);
+    var svg = d3.select("#monthlinechart").append("svg")
+            .attr("width",  width  + margin.left + margin.right)
+            .attr("height", height + margin.top  + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    d3.csv("/311DataVisualization/d3-311/MonthlyChart.csv", function (error, data) {
+        var labelVar = 'quarter';
+        var varNames = d3.keys(data[0]).filter(function (key) { return key !== labelVar;});
+        color.domain(varNames);
+        var seriesData = varNames.map(function (name) {
+            return {
+                name: name,
+                values: data.map(function (d) {
+                    return {name: name, label: d[labelVar], value: +d[name]};
+                })
+            };
+        });
+        x.domain(data.map(function (d) { return d.quarter; }));
+        y.domain([
+            d3.min(seriesData, function (c) {
+                return d3.min(c.values, function (d) { return d.value; });
+            }),
+            d3.max(seriesData, function (c) {
+                return d3.max(c.values, function (d) { return d.value; });
+            })
+        ]);
+        svg.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+        svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Number of Requests");
+        var series = svg.selectAll(".series")
+                .data(seriesData)
+                .enter().append("g")
+                .attr("class", "series");
+        series.append("path")
+                .attr("class", "line")
+                .attr("d", function (d) { return line(d.values); })
+                .style("stroke", function (d) { return color(d.name); })
+                .style("stroke-width", "4px")
+                .style("fill", "none")
+        series.selectAll(".point")
+                .data(function (d) { return d.values; })
+                .enter().append("circle")
+                .attr("class", "point")
+                .attr("cx", function (d) { return x(d.label) + x.rangeBand()/2; })
+                .attr("cy", function (d) { console.log(d); return y(d.value); })
+                .attr("r", "5px")
+                .style("fill", function (d) { return color(d.name); })
+                .style("stroke", "grey")
+                .style("stroke-width", "2px")
+                .on("mouseover", function (d) { showPopover.call(this, d); })
+                .on("mouseout",  function (d) { removePopovers(); })
+        var legend = svg.selectAll(".legend")
+                .data(varNames.slice().reverse())
+                .enter().append("g")
+                .attr("class", "legend")
+                .attr("transform", function (d, i) { return "translate(55," + i * 20 + ")"; });
+        legend.append("rect")
+                .attr("x", width - 10)
+                .attr("width", 10)
+                .attr("height", 10)
+                .style("fill", color)
+                .style("stroke", "grey");
+        legend.append("text")
+                .attr("x", width - 12)
+                .attr("y", 6)
+                .attr("dy", ".35em")
+                .style("text-anchor", "end")
+                .text(function (d) { return d; });
+        function removePopovers () {
+            d3.select("#tooltip").classed("hidden", true);
+        }
+        function showPopover (d) {
+
+            //Get this bar's x/y values, then augment for the tooltip
+            var xPosition = parseFloat(d3.select(this).attr("cx")) +50;
+            var yPosition = parseFloat(d3.select(this).attr("cy")) + 54;
+            //console.log(xPosition);
+            //Create the tooltip label
+            d3.select("#tooltip")
+                    .style("left", xPosition + "px")
+                    .style("top", yPosition + "px")
+                    .select("#value")
+                    .text(d.name+" " + d.label +" " + d3.format(",")(d.value ? d.value: d.y1 - d.y0));
+
+            //Show the tooltip
+            d3.select("#tooltip").classed("hidden", false);
+
+
+        }
+    });
+
+
+    var novOpenData,closeOpenData;
+    d3.csv('/311DataVisualization/d3-311/NovOpenCase.csv', function(err, novOpenData) {
+
+        var wDN = 180;
+        var hDN = 150;
+
+        var borough=[{Name:"BRONX",Count:0}
+            ,{Name:"BROOKLYN",Count:0},
+            {Name:"MANHATTAN",Count:0},
+            {Name:"QUEENS",Count:0},
+            {Name:"STATEN ISLAND",Count:0}];
+        var barNov = d3.select("#novOpenCase").append("svg").attr("width", wDN).attr("height", hDN);
+
+        var filtereddata = novOpenData.filter(function(d) {
+
+            borough.forEach(function (value) {
+                var name = value.Name;
+                if( value.Name== d.Borough)
+                {
+                    value.Count=value.Count+ parseInt(d.opencount);
+                }
+            });
+            return d;
+        })
+
+        var BoroughName=["BRONX","BROOKLYN","MANHATTAN","QUEENS","STATEN ISLAND"]
+        var total = novOpenData.reduce(function(prev, b) {
+            return prev + parseInt(b.opencount);
+        },0);
+
+        var xBarNov = d3.scale.ordinal()
+                .rangeRoundBands([0, wDN*2], .5);
+
+        var yBarNov = d3.scale.linear()
+                .range([hDN, 0]);
+
+        var xAxisbar = d3.svg.axis()
+                .scale(xBarNov)
+                .orient("bottom");
+
+        var yAxisbar = d3.svg.axis()
+                .scale(yBarNov)
+                .orient("left")
+                .ticks(10, "%");
+        barNov.select("g").remove();
+        var svgBar = barNov
+                .append("g")
+                .attr("transform", "translate(" + wDN*2+ "," + wDN + ")");
+
+        xBarNov.domain(borough.map(function(d){return d.Name;}));
+        yBarNov.domain([0, d3.max(borough, function(d) { return  parseInt(d.Count)/total ; })]);
+
+        svgBar.append("g")
+                .attr("class", "x baraxis")
+                .attr("transform", "translate(0," + hDN + ")")
+                .call(xAxisbar);
+
+        svgBar.append("g")
+                .attr("class", "y baraxis")
+                .call(yAxisbar)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Percentage");
+
+        svgBar.selectAll(".bar")
+                .data(borough)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", function(d) { return xBarNov(d.Name); })
+                .attr("width", xBarNov.rangeBand())
+                .attr("y", function(d) { return yBarNov(d.Count/total); })
+                .attr("height", function(d) { return hDN - yBarNov(d.Count/total); });
+    });
+
+
+function createStackChart(){
+    var margins = {
+                top: 12,
+                left: 48,
+                right: 24,
+                bottom: 24
+            },
+            legendPanel = {
+                width: 180
+            },
+            width = 500 - margins.left - margins.right - legendPanel.width,
+            height = 200 - margins.top - margins.bottom,
+            dataset = [{
+                data: [{
+                    borough: 'BRONX',
+                    count: 12363
+                }, {
+                    borough: 'BROOKLYN',
+                    count: 18567
+                }, {
+                    borough: 'MANHATTAN',
+                    count: 13127
+                }, {
+                    borough: 'QUEENS',
+                    count: 15155
+                }, {
+                    borough: 'STATEN ISLAND',
+                    count: 2289
+                }],
+                name: 'Closed Case'
+            }, {
+                data: [{
+                    borough: 'BRONX',
+                    count: 13162
+                }, {
+                    borough: 'BROOKLYN',
+                    count: 18048
+                }, {
+                    borough: 'MANHATTAN',
+                    count: 12946
+                }, {
+                    borough: 'QUEENS',
+                    count: 9997
+                }, {
+                    borough: 'STATEN ISLAND',
+                    count: 1801
+                }],
+                name: 'Open Case'
+            }
+
+            ],
+            series = dataset.map(function (d) {
+                return d.name;
+            }),
+            dataset = dataset.map(function (d) {
+                return d.data.map(function (o, i) {
+                    // Structure it so that your numeric
+                    // axis (the stacked amount) is y
+                    return {
+                        y: o.count,
+                        x: o.borough
+                    };
+                });
+            }),
+            stack = d3.layout.stack();
+
+    stack(dataset);
+
+    var dataset = dataset.map(function (group) {
+                return group.map(function (d) {
+                    // Invert the x and y values, and y0 becomes x0
+                    return {
+                        x: d.y,
+                        y: d.x,
+                        x0: d.y0
+                    };
+                });
+            }),
+            svg = d3.select('body')
+                    .append('svg')
+                    .attr('width', width + margins.left + margins.right + legendPanel.width)
+                    .attr('height', height + margins.top + margins.bottom)
+                    .append('g')
+                    .attr('transform', 'translate(' + margins.left + ',' + margins.top + ')'),
+            xMax = d3.max(dataset, function (group) {
+                return d3.max(group, function (d) {
+                    return d.x + d.x0;
+                });
+            }),
+            xScale = d3.scale.linear()
+                    .domain([0, xMax])
+                    .range([0, width]),
+            boroughs = dataset[0].map(function (d) {
+                return d.y;
+            }),
+           // _ = console.log(months),
+            yScale = d3.scale.ordinal()
+                    .domain(boroughs)
+                    .rangeRoundBands([0, height], .1),
+            xAxis = d3.svg.axis()
+                    .scale(xScale)
+                    .orient('bottom'),
+            yAxis = d3.svg.axis()
+                    .scale(yScale)
+                    .orient('left'),
+            colours = d3.scale.category10(),
+            groups = svg.selectAll('g')
+                    .data(dataset)
+                    .enter()
+                    .append('g')
+                    .style('fill', function (d, i) {
+                        return colours(i);
+                    }),
+            rects = groups.selectAll('rect')
+                    .data(function (d) {
+                        return d;
+                    })
+                    .enter()
+                    .append('rect')
+                    .attr('x', function (d) {
+                        return xScale(d.x0);
+                    })
+                    .attr('y', function (d, i) {
+                        return yScale(d.y);
+                    })
+                    .attr('height', function (d) {
+                        return yScale.rangeBand();
+                    })
+                    .attr('width', function (d) {
+                        return xScale(d.x);
+                    })
+                    .on('mouseover', function (d) {
+                        var xPos = parseFloat(d3.select(this).attr('x')) / 2 + width / 2;
+                        var yPos = parseFloat(d3.select(this).attr('y')) + yScale.rangeBand() / 2;
+
+                        d3.select('#tooltip')
+                                .style('left', xPos + 'px')
+                                .style('top', yPos + 'px')
+                                .select('#value')
+                                .text(d.x);
+
+                        d3.select('#tooltip').classed('hidden', false);
+                    })
+                    .on('mouseout', function () {
+                        d3.select('#tooltip').classed('hidden', true);
+                    })
+
+    svg.append('g')
+            .attr('class', 'axis')
+            .attr('transform', 'translate(0,' + height + ')')
+            .call(xAxis);
+
+    svg.append('g')
+            .attr('class', 'axis')
+            .call(yAxis);
+
+    svg.append('rect')
+            .attr('fill', 'transparent')
+            .attr('width', 160)
+            .attr('height', 30 * dataset.length)
+            .attr('x', width + margins.left)
+            .attr('y', 0);
+
+    series.forEach(function (s, i) {
+        svg.append('text')
+                .attr('fill', 'black')
+                .attr('x', width + margins.left + 8)
+                .attr('y', i * 24 + 24)
+                .text(s);
+        svg.append('rect')
+                .attr('fill', colours(i))
+                .attr('width', 60)
+                .attr('height', 20)
+                .attr('x', width + margins.left + 90)
+                .attr('y', i * 24 + 6);
+    });
+}
+
+
+    function topSerivceComplain(){
+        d3.csv('/311DataVisualization/d3-311/AgencyComplainType.csv', function(err, serviceData) {
+        dataset=[]
+            serviceData.forEach(function(value){
+
+
+                    var flag=true;
+                    dataset.forEach(function(valueds){
+                        if(valueds.key==value.ComplaintType){
+                            valueds.count+= parseInt(value.count);
+                            flag=false;
+                        }
+                    })
+                    if(flag){
+                        dataset.push({
+                            key:value.ComplaintType,
+                            count: parseInt(value.count)
+
+                        })
+                    }
+        })
+
+            var total = dataset.reduce(function(prev, b) {
+                return prev + parseInt(b.count);
+            },0);
+
+           /* dataset.forEach(function(valueds){
+              valueds.count= valueds.count/total*100
+            })*/
+            dataset.sort(function(a,b){
+                return parseInt(b.count)- parseInt(a.count)
+            })
+           var filterdata= dataset.splice(0,10);
+            console.log(filterdata);
+
+            var wDN = 180;
+            var hDN = 150;
+            var barNov = d3.select("#serviceCompalin").append("svg").attr("width", wDN).attr("height", hDN);
+            var xBarNov = d3.scale.ordinal()
+                    .rangeRoundBands([0, wDN*2], .5);
+
+            var yBarNov = d3.scale.linear()
+                    .range([hDN, 0]);
+
+            var xAxisbar = d3.svg.axis()
+                    .scale(xBarNov)
+                    .orient("bottom");
+
+            var yAxisbar = d3.svg.axis()
+                    .scale(yBarNov)
+                    .orient("left")
+                    .ticks(10, "%");
+            barNov.select("g").remove();
+            var svgBar = barNov
+                    .append("g")
+                    .attr("transform", "translate(" + wDN*2+ "," + wDN + ")");
+
+            xBarNov.domain(filterdata.map(function(d){return d.key;}));
+            yBarNov.domain([0, d3.max(filterdata, function(d) { return  parseInt(d.count)/total ; })]);
+
+            svgBar.append("g")
+                    .attr("class", "x baraxis")
+                    .attr("transform", "translate(0," + hDN + ")")
+                    .call(xAxisbar).selectAll("text")
+                    .style("text-anchor", "end")
+                    .attr("dx", "-.8em")
+                    .attr("dy", ".15em")
+                    .attr("transform", function(d) {
+                        return "rotate(-65)"
+                    });
+
+            svgBar.append("g")
+                    .attr("class", "y baraxis")
+                    .call(yAxisbar)
+                    .append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 6)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text("Percentage");
+
+            svgBar.selectAll(".bar")
+                    .data(filterdata)
+                    .enter().append("rect")
+                    .attr("class", "bar")
+                    .attr("x", function(d) { return xBarNov(d.key); })
+                    .attr("width", xBarNov.rangeBand())
+                    .attr("y", function(d) { return yBarNov(d.count/total); })
+                    .attr("height", function(d) { return hDN - yBarNov(d.count/total); });
+
+        })
+    }
+  //  topSerivceComplain();
+  //  createStackChart();
+
+
+    d3.csv('/311DataVisualization/d3-311/AverageServiceClosetime.csv',function(err,agencyDataSet){
+
+        var dataSet = [];
+           // console.log(BoroughName[borough]+mapColor[borough])
+        agencyDataSet.forEach(function (value) {
+                var flag = true;
+                dataSet.forEach(function (valueds) {
+                    if (valueds.key == value.Agency) {
+                        valueds.count += parseInt(value.AvgTimeMin);
+                        valueds.number++;
+                        flag = false;
+                    }
+                })
+                if (flag) {
+                    dataSet.push({
+                        key: value.Agency,
+                        count: parseInt(value.AvgTimeMin),
+                        number:1
+                    })
+                }
+            })
+        dataSet.forEach(function (valueds){
+            valueds.count=valueds.count/valueds.number
+        })
+        var total = dataSet.reduce(function(prev, b) {
+            return prev + parseInt(b.count);
+        },0);
+         dataSet.sort(function(a,b){
+                return  parseInt(b.count)-parseInt(a.count)
+            })
+
+            //get the top 5
+            dataSet= dataSet.slice(0,9);
+            var AgencyName= [];
+            var AgencyValue=[];
+            for(var i in dataSet){
+                AgencyName.push(dataSet[i].key)
+                AgencyValue.push(parseFloat((dataSet[i].count)).toFixed(2))
+            }
+
+            var width = 250,
+                    bar_height = 20.00,
+                    height = bar_height * AgencyName.length;
+
+            /* step 2 */
+            var x, y;
+            x = d3.scale.linear()
+                    .domain([0.00,500])
+                    .range([0.00, 250.99]);
+
+            var left_width = 80.00;
+            var gap = 2;
+            // redefine y for adjusting the gap
+            y = d3.scale.ordinal()
+                    .domain(AgencyValue)
+                    .rangeBands([0, parseFloat((bar_height + 2 * gap) * AgencyName.length)]);
+            var chart = d3.select("#Agencykey")
+                    .append('svg')
+                    .attr('class', 'agchart').style("background","white") //mapColor[borough]
+                    .attr('width', parseFloat(left_width + width + 40))
+                    .attr('height', parseFloat((bar_height + gap * 2) * AgencyName.length + 30))
+                    .append("g")
+                    .attr("transform", "translate(10.00, 20.00)");
+
+            chart.selectAll("line")
+                    .data(x.ticks(10.00))
+                    .enter().append("line")
+                    .attr("x1", function(d) { return x(d) + left_width; })
+                    .attr("x2", function(d) { return parseFloat(x(d) + left_width) })
+                    .attr("y1", 0)
+                    .attr("y2", (bar_height + gap * 2) * AgencyName.length);
+
+            chart.selectAll(".rule")
+                    .data(x.ticks(10))
+                    .enter().append("text")
+                    .attr("class", "rule")
+                    .attr("x", function(d) { return x(d) + left_width; })
+                    .attr("y", 0)
+                    .attr("dy", -6)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", 10)
+                    .text(String);
+
+            chart.selectAll("rect")
+                    .data(AgencyValue)
+                    .enter().append("rect")
+                    .attr("x", left_width)
+                    .attr("y", function(d) { return y(d) + gap; })
+                    .attr("width", x)
+                    .attr("height", bar_height);
+
+            chart.selectAll("text.score")
+                    .data(AgencyValue)
+                    .enter().append("text")
+                    .attr("x", function(d) { return x(d) + left_width+35; })
+                    .attr("y", function(d, i){ return y(d) + y.rangeBand()/2; } )
+                    .attr("dx", -5)
+                    .attr("dy", ".36em")
+                    .attr("text-anchor", "end")
+                    .attr('class', 'score')
+                    .text(function(d) {
+                        return d + "%";
+                    });
+
+            chart.selectAll("text.name")
+                    .data(AgencyName)
+                    .enter().append("text")
+                    .attr("x", left_width / 2)
+                    .attr("y", function(d, i){ return y(AgencyValue[i]) + y.rangeBand()/2; } )
+                    .attr("dy", ".36em")
+                    .attr("text-anchor", "middle")
+                    .attr('class', 'name')
+                    .text(String);
+
+
+        //
+    })
+
+</script>
+</body>
+</html>

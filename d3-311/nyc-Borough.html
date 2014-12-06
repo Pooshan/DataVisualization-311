@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="/311DataVisualization/d3/d3.js"></script>
+    <script type="text/javascript" src="/311DataVisualization/d3/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" src="/311DataVisualization/d3/d3.layout.cloud.js"></script>
+
+    <style>
+
+        body{
+            background-image: url('../css/images/bg02.png');
+        }
+        #menuBar{
+            background-color: #364050;
+               margin-top: -20px;
+            width: 100%;
+        }
+        #logo{
+            font-family: 'Open Sans Condensed', sans-serif;
+            font-weight: 500;
+            font-size: 2em;
+            letter-spacing: 0.1em;
+            width: 184px;
+        }
+        #logo a
+        {
+            display: block;
+
+            background-color: #c94663;
+
+            background-image: url('../css/images/bg01.png');
+
+            padding: 0.475em 0.25em;
+
+            border-radius: 0.2em;
+
+            text-align: center;
+
+            box-shadow: inset 0px 0px 0px 1px rgba(255, 255, 255, 0.15), 0 0.025em 0.15em 0em rgba(0, 0, 0, 0.25);
+
+            text-decoration: none;
+
+            color: #fff;
+
+        }
+        .axis text {
+            font: 8px sans-serif;
+        }
+
+        .axis path {
+            display: none;
+        }
+
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+
+        .grid-background {
+            fill: #ddd;
+        }
+
+        .grid line,
+        .grid path {
+            fill: none;
+            stroke: #fff;
+            shape-rendering: crispEdges;
+        }
+
+        .grid .minor.tick line {
+            stroke-opacity: .5;
+        }
+
+        .brush .extent {
+            stroke: #000;
+            fill-opacity: .125;
+            shape-rendering: crispEdges;
+        }
+
+        #tooltip {
+            position: absolute;
+            width: 180px;
+            height: auto;
+            padding: 10px;
+            background-color: white;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            border-radius: 10px;
+            -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+        }
+
+        #tooltip.hidden {
+            display: none;
+        }
+
+        #tooltip p {
+            margin: 0;
+            font-family: sans-serif;
+            font-size: 16px;
+            line-height: 20px;
+        }
+
+
+        .bar {
+            fill: steelblue;
+        }
+
+        .baraxis path,
+        .baraxis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+        .baraxis {
+            font: 10px sans-serif;
+        }
+
+
+        .agchart {
+            background: #b0e0f8;
+            margin: 5px;
+        }
+
+        .agchart rect {
+            stroke: white;
+            fill: steelblue;
+        }
+
+        .agchart text {
+            fill: white;
+        }
+
+        .agchart text.name {
+            fill: #000;
+        }
+
+        .agchart line {
+            stroke: #c1c1c1;
+        }
+
+        .agchart .rule {
+            fill: #000;
+        }
+
+
+
+
+        rect.bordered {
+            stroke: #E6E6E6;
+            stroke-width:2px;
+        }
+
+        text.mono {
+            font-size: 9pt;
+            font-family: Consolas, courier;
+            fill: #aaa;
+        }
+
+        text.axis-workweek {
+            fill: #000;
+        }
+
+        text.axis-worktime {
+            fill: #000;
+        }
+    </style>
+
+
+</head>
+<body>
+<div id="menuBar">
+    <h1 id="logo">
+        <a>311</a>
+    </h1>
+</div>
+<div id="firstQuery">
+<div>
+<div id="novDN" style="float: right; margin-right: 20%"></div>
+<div id="barNov" style="float: right;margin-left: 37%;position: absolute; margin-top: 3%"></div>
+</div>
+<div style="position: absolute">
+    <table >
+        <thead id="split"></thead>
+        <tbody></tbody>
+    </table>
+    <table>
+        <tr><td>
+        <tr><td><b>Borough</b>   </td><td><b> Count</b></td></tr>
+        <tr><td>Bronx      </td><td> <div id="BRONX"></div></td></tr>
+        <tr><td>Brooklyn    </td><td>  <div id="BROOKLYN"></div></td></tr>
+        <tr><td>Manhattan   </td><td>  <div id="MANHATTAN"></div></td></tr>
+        <tr><td>Queens       </td><td> <div id="QUEENS"></div></td></tr>
+        <tr><td>Staten Island </td><td><div id="STATENISLAND"></div> </td></tr>
+    </table>
+
+</div>
+<div>
+<div style="margin-left: 183px;margin-top: 23px;"><img src="/311DataVisualization/d3-311/borough-Trans.gif" height="500px" ></div>
+<div style="position: absolute; top:6em;left: 0px;" id="nycMap" ></div>
+
+<div id="novBrush"></div>
+<div id="tooltip" class="hidden">
+    <p><strong>Total </strong><span id="value">100</span></p>
+
+</div>
+
+</div>
+<div>
+    <div id="Borough0" style="float: left"></div>
+    <div id="Borough1" style="float: left"></div>
+    <div id="Borough2" style="float: left"></div>
+    <div id="Borough3" style="float: left"></div>
+    <div id="Borough4" style="float: left"></div>
+</div>
+<div>
+    <div id="agencyComplaint" style="float: left"></div>
+    <div id="heatMapChart" style="float: left"></div>
+</div>
+<script>
+
+    var width = 960,
+            height = 500;
+
+    var svg = d3.select("#nycMap").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+    var projection = d3.geo.mercator()
+            .center([-73.94, 40.70])
+            .scale(52000)
+            .translate([(width) / 2, (height)/2]);
+
+    //Generate Map
+    d3.json("/311DataVisualization/d3-311/nyc.json", function(error, nyb) {
+
+
+
+        var path = d3.geo.path()
+                .projection(projection);
+
+        var g = svg.append("g");
+
+        g.append("g")
+                .attr("id", "boroughs")
+                .selectAll(".state")
+                .data(nyb.features)
+                .enter().append("path")
+                .attr("class", function(d){ return d.properties.name; })
+                .attr("d", path).style("fill", "rgba(0, 128, 0, .02)");
+
+        //Load in cities data
+      /* d3.csv("BoroughDataNov.csv", function(data) {
+
+            svg.selectAll("circle")
+                    .data(data)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", function(d) {
+
+                        return projection([d.Longitude, d.Latitude])[0];
+                    })
+                    .attr("cy", function(d) {
+                        return projection([d.Longitude, d.Latitude])[1];
+                    })
+                    .attr("r", 5)
+                    .style("fill", "yellow")
+                    .style("opacity", 0.05);
+
+        });*/
+
+    });
+
+    var margin = {top: 20, right: 40, bottom: 20, left: 40},
+            widthnov = 960 - margin.left - margin.right,
+            heightnov = 100 - margin.top - margin.bottom;
+    contextHeight = 50;
+    contextWidth = widthnov * .5;
+    var novBrush = d3.select("#novBrush").append("svg")
+            .attr("width", widthnov + margin.left + margin.right )
+            .attr("height", heightnov + margin.top + margin.bottom )
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var borough=[{Name:"BRONX",Count:0, Latitude:40.87740813 ,Longitude:-73.88526915}
+            ,{Name:"BROOKLYN",Count:0, Latitude:40.62768397 ,Longitude:-73.96075748},
+        {Name:"MANHATTAN",Count:0, Latitude:40.79753455 ,Longitude:-73.95975127},
+        {Name:"QUEENS",Count:0, Latitude:40.70861121 ,Longitude:-73.82885164,Drawn:0},
+        {Name:"STATEN ISLAND",Count:0, Latitude:40.511447093379374 ,Longitude:-74.23292236414053}];
+   /* var sessions = new Array(
+            {Borough: "BRONX", Count: 00},
+            {Borough: "BROOKLYN", Count: 00},
+            {Borough: "MANHATTAN", Count: 00},
+            {Borough: "QUEENS", Count: 00},
+            {Borough: "STATEN ISLAND", Count: 00}
+    );*/
+
+    //Show the data on map
+    d3.csv('/311DataVisualization/d3-311/BoroughDataNov.csv', function(err, nov) {
+        var maxCreated = d3.max(nov, function(d) {  return parseInt(d.date_mday) });
+        var minCreated = d3.min(nov, function(d) { return parseInt(d.date_mday) });
+
+
+        var x = d3.scale.linear()
+                .domain([minCreated,maxCreated])
+                .range([0, widthnov]);
+        var contextAxis = d3.svg.axis()
+                .scale(x).ticks(21)
+                 .orient("bottom").
+                    tickPadding(0);
+
+        var brush = d3.svg.brush()
+                .x(x).extent([maxCreated-1,maxCreated]).on("brushend", brushended)
+
+        novBrush.append("rect")
+                .attr("class", "grid-background")
+                .attr("width", widthnov)
+                .attr("height", heightnov);
+        novBrush.append("g")
+                .attr("class", "x grid")
+                .attr("transform", "translate("+( 0 )+"," + heightnov + ")")
+                .call(d3.svg.axis()
+                        .scale(x)
+                        .orient("bottom")
+                        .ticks(21).tickFormat("")
+                        .tickSize(-heightnov).tickPadding(5)
+                        ).selectAll(".tick")
+                .classed("minor", function(d) {  return d; })
+
+
+        novBrush.append("g") .attr("class", "x axis")
+                .attr("transform", "translate(0," + heightnov + ")").
+                call(contextAxis)
+
+        var gBrush = novBrush.append("g")
+                .attr("class", "brush")
+                .call(brush)
+                .call(brush.event);
+
+        gBrush.selectAll("rect")
+                .attr("height", heightnov);
+
+        var filtered = nov.filter(function(d) {
+
+            borough.forEach(function (value) {
+                var name = value.Name;
+                if( value.Name== d.Borough && (d.date_mday== minCreated || d.date_mday == maxCreated) )
+                {
+                    value.Count++;
+                }
+            });
+
+            return d.date_mday== minCreated || d.date_mday == maxCreated
+        })
+        var itoalCount=0;
+       for (var key in borough) {
+            d3.select("#"+borough[key].Name.replace(" ","")).text(borough[key].Count);
+            itoalCount=itoalCount+borough[key].Count;
+        }
+        CreateUpdateDoughNut(borough,itoalCount);
+        /*var thead = d3.select("#split").selectAll("th")
+                .data(d3.keys(sessions[0]))
+                .enter().append("th").text(function(d){return d});
+        var tr = d3.select("tbody").selectAll("tr")
+                .data(sessions).enter().append("tr")*/
+
+        // cells
+        /*var td = tr.selectAll("td")
+                .data(function(d){return d3.values(d)})
+                .enter().append("td")
+                .text(function(d) {return d;})*/
+
+        svg.selectAll("circle")
+                .data(borough)
+                .enter()
+                .append("circle")
+                .attr("cx", function(d) {
+
+                    return projection([d.Longitude, d.Latitude])[0];
+                })
+                .attr("cy", function(d) {
+
+                    return projection([d.Longitude, d.Latitude])[1];
+                })
+                .attr("r", function(d){
+
+                    return (d.Count/itoalCount)*100;
+
+                })
+                .style("fill", "yellow")
+                .style("opacity", 0.4 ).on("mouseover", function(d) {
+
+                    //Get this bar's x/y values, then augment for the tooltip
+                    var xPosition = parseFloat(d3.select(this).attr("cx")) +10;
+                    var yPosition = parseFloat(d3.select(this).attr("cy")) + 14;
+                    //console.log(xPosition);
+                    //Create the tooltip label
+                    d3.select("#tooltip")
+                            .style("left", xPosition + "px")
+                            .style("top", yPosition + "px")
+                            .select("#value")
+                            .text(d.Count);
+
+                    //Show the tooltip
+                    d3.select("#tooltip").classed("hidden", false);
+
+                }).on("mouseout", function() {
+
+                    //Hide the tooltip
+                    d3.select("#tooltip").classed("hidden", true);
+
+                }).on("click",function(d){
+                    CreateUpdateBarNov(borough,d)
+                })
+
+
+
+
+
+        function brushended() {
+            if (!d3.event.sourceEvent) return;
+            var extent0 = brush.extent();
+
+            extent1=extent0
+            if (extent1[0] <= extent1[1]) {
+                extent1[0] = Math.floor(extent0[0]);
+                extent1[1] = Math.ceil(extent0[1]);
+            }
+
+            d3.select(this).transition()
+                    .call(brush.extent(extent1))
+                    .call(brush.event);
+            var borough=[{Name:"BRONX",Count:0, Latitude:40.87740813 ,Longitude:-73.88526915}
+                ,{Name:"BROOKLYN",Count:0, Latitude:40.62768397 ,Longitude:-73.96075748},
+                {Name:"MANHATTAN",Count:0, Latitude:40.79753455 ,Longitude:-73.95975127},
+                {Name:"QUEENS",Count:0, Latitude:40.70861121 ,Longitude:-73.82885164,Drawn:0},
+                {Name:"STATEN ISLAND",Count:0, Latitude:40.511447093379374 ,Longitude:-74.23292236414053}];
+            var filtereddata = nov.filter(function(d) {
+
+                borough.forEach(function (value) {
+                    var name = value.Name;
+                    if( value.Name== d.Borough && (d.date_mday>= extent1[0] && d.date_mday <= extent1[1]) )
+                    {
+                        value.Count++;
+                    }
+                });
+                return d.date_mday>= extent1[0] && d.date_mday <= extent1[1]
+            })
+           var iCount=0;
+            for (var key in borough) {
+                d3.select("#"+borough[key].Name.replace(" ","")).text(borough[key].Count);
+                iCount=iCount+borough[key].Count;
+            }
+            CreateUpdateDoughNut(borough,iCount);
+            svg.selectAll("circle").remove()
+            svg.selectAll("circle")
+                    .data(borough)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", function(d) {
+
+                        return projection([d.Longitude, d.Latitude])[0];
+                    })
+                    .attr("cy", function(d) {
+                        return projection([d.Longitude, d.Latitude])[1];
+                    })
+                    .attr("r",function(d){
+
+                        return (d.Count/iCount)*100;
+
+                    })
+                    .style("fill", "yellow")
+                    .style("opacity", 0.4).on("mouseover", function(d) {
+
+                        //Get this bar's x/y values, then augment for the tooltip
+                        var xPosition = parseFloat(d3.select(this).attr("cx")) +10;
+                        var yPosition = parseFloat(d3.select(this).attr("cy")) + 14;
+                       // console.log(xPosition);
+                        //Create the tooltip label
+                        d3.select("#tooltip")
+                                .style("left", xPosition + "px")
+                                .style("top", yPosition + "px")
+                                .select("#value")
+                                .text(d.Count);
+
+                        //Show the tooltip
+                        d3.select("#tooltip").classed("hidden", false);
+
+                    }).on("mouseout", function() {
+
+                        //Hide the tooltip
+                        d3.select("#tooltip").classed("hidden", true);
+
+                    }).on("click",function(d){
+                        CreateUpdateBarNov(borough,d)
+                    });
+        }
+
+    })
+
+    var mapColor =
+            ["rgba(229, 197, 76, 1)",
+            "rgba(200, 115, 41, 1)",
+    "rgba(111, 142, 162, 1)",
+    "rgba(154, 162, 55, 1)",
+    "rgba(166, 113, 135, 1)"];
+
+    var wDN = 200;
+    var hDN = 200;
+    //Create SVG element
+    var svgDN = d3.select("#novDN")
+            .append("svg").attr("width", wDN)
+                .attr("height", hDN);
+
+    var barNov = d3.select("#barNov").append("svg").attr("width", wDN).attr("height", hDN);
+    var BoroughName=["BRONX","BROOKLYN","MANHATTAN","QUEENS","STATEN ISLAND"]
+    //Create doughnut chart
+    function CreateUpdateDoughNut(borough,total) {
+
+        //Width and height
+
+
+        var dataset = [];
+        for (var key in borough) {
+            dataset.push(parseFloat((borough[key].Count/total) *100).toFixed(2));
+        }
+        var outerRadius = wDN/2 ;
+        var innerRadius = wDN / 4;
+        var arc = d3.svg.arc()
+                .innerRadius(innerRadius)
+                .outerRadius(outerRadius);
+
+        var pie = d3.layout.pie();
+
+        //Easy colors accessible via a 10-step ordinal scale
+        var color = d3.scale.category10();
+
+        svgDN.selectAll("g.arc").remove();
+
+        //Set up groups
+        var arcs = svgDN.selectAll("g.arc")
+                .data(pie(dataset))
+                .enter()
+                .append("g")
+                .attr("class", "arc")
+                .attr("transform", "translate(" + outerRadius + "," + outerRadius + ")");
+
+        //Draw arc paths
+        arcs.append("path")
+                .attr("fill", function(d, i) {
+                    return mapColor[i]//color(i);
+                })
+                .attr("d", arc);
+
+        //Labels
+        arcs.append("text")
+                .attr("transform", function(d) {
+                    return "translate(" + arc.centroid(d) + ")";
+                })
+                .attr("text-anchor", "middle")
+                .text(function(d) {
+                    return d.value + "%";
+                });
+        //
+
+
+
+        var xBarNov = d3.scale.ordinal()
+                .rangeRoundBands([0, wDN*2], .5);
+
+        var yBarNov = d3.scale.linear()
+                .range([hDN, 0]);
+
+        var xAxisbar = d3.svg.axis()
+                .scale(xBarNov)
+                .orient("bottom");
+
+        var yAxisbar = d3.svg.axis()
+                .scale(yBarNov)
+                .orient("left")
+                .ticks(10, "%");
+        barNov.select("g").remove();
+        var svgBar = barNov
+                .append("g")
+                .attr("transform", "translate(" + wDN*2+ "," + wDN + ")");
+
+        xBarNov.domain(borough.map(function(d){return d.Name;}));
+        yBarNov.domain([0, d3.max(borough, function(d) { return  parseInt(d.Count)/total ; })]);
+
+        svgBar.append("g")
+                .attr("class", "x baraxis")
+                .attr("transform", "translate(0," + hDN + ")")
+                .call(xAxisbar);
+
+        svgBar.append("g")
+                .attr("class", "y baraxis")
+                .call(yAxisbar)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Percentage");
+
+        svgBar.selectAll(".bar")
+                .data(borough)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", function(d) { return xBarNov(d.Name); })
+                .attr("width", xBarNov.rangeBand())
+                .attr("y", function(d) { return yBarNov(d.Count/total); })
+                .attr("height", function(d) { return hDN - yBarNov(d.Count/total); });
+
+    }
+
+    function CreateUpdateBarNov(Allborough,selectedBorough){
+
+       d3.csv('/311DataVisualization/d3-311/boroughBarChart.csv', function(err, novBCData) {
+
+           var filterData=  novBCData.filter(function(d){
+
+               if(d.Borough==selectedBorough.Name){
+                   return d;
+               }
+           })
+            // sort the data
+           filterData.sort(function(a,b){
+               return parseInt(a.date_mday)- parseInt(b.date_mday)
+           })
+           var total = filterData.reduce(function(prev, b) {
+               return prev + parseInt(b.count);
+           },0);
+
+           var xBarNov = d3.scale.ordinal()
+                   .rangeRoundBands([0, wDN*2], .5);
+
+           var yBarNov = d3.scale.linear()
+                   .range([hDN, 0]);
+
+           var xAxisbar = d3.svg.axis()
+                   .scale(xBarNov)
+                   .orient("bottom");
+
+           var yAxisbar = d3.svg.axis()
+                   .scale(yBarNov)
+                   .orient("left")
+                   .ticks(10, "%");
+
+           barNov.select("g").remove();
+           var svgBar = barNov
+                   .append("g")
+                   .attr("transform", "translate(" + wDN*2+ "," + wDN + ")");
+
+           xBarNov.domain(filterData.map(function(d){return d.date_mday;}));
+           yBarNov.domain([0,d3.max(filterData, function(d) { return  parseInt(d.count)/total ; })]);
+
+           svgBar.append("g")
+                   .attr("class", "x baraxis")
+                   .attr("transform", "translate(0," + hDN + ")")
+                   .call(xAxisbar);
+
+           svgBar.append("g")
+                   .attr("class", "y baraxis")
+                   .call(yAxisbar)
+                   .append("text")
+                   .attr("transform", "rotate(-90)")
+                   .attr("y", 6)
+                   .attr("dy", ".71em")
+                   .style("text-anchor", "end")
+                   .text("Percentage");
+
+           svgBar.selectAll(".bar")
+                   .data(filterData)
+                   .enter().append("rect").transition().duration(1000).ease("linear")
+                   .attr("class", "bar")
+                   .attr("x", function(d) { return xBarNov(d.date_mday); })
+                   .attr("width", xBarNov.rangeBand())
+                   .attr("y", function(d) { return yBarNov(d.count/total); })
+                   .attr("height", function(d) { return hDN - yBarNov(d.count/total); })
+                   .style("fill",function(d){ return  mapColor[BoroughName.indexOf(d.Borough)]  });
+
+        });
+
+       }
+
+    //5 Borough Agent Complains
+     d3.csv('/311DataVisualization/d3-311/NovBoroughAggency.csv',function(err,agencyDataSet){
+
+        for(var borough in BoroughName){
+            console.log(BoroughName[borough]+mapColor[borough])
+          var dataSet=agencyDataSet.filter(function(d){
+                if(d.Borough==BoroughName[borough])
+                    return  d;
+            });
+            dataSet.sort(function(a,b){
+                return  parseInt(b.count)-parseInt(a.count)
+            })
+            var total = dataSet.reduce(function(prev, b) {
+                return prev + parseInt(b.count);
+            },0);
+            //get the top 5
+            dataSet= dataSet.slice(0,5);
+            var AgencyName= [];
+            var AgencyValue=[];
+           for(var i in dataSet){
+               AgencyName.push(dataSet[i].Agency)
+               AgencyValue.push(parseInt( Math.round(dataSet[i].count/total*100)))
+           }
+
+            var width = 150,
+               bar_height = 20,
+               height = bar_height * AgencyName.length;
+            var left_width = 80;
+
+
+
+            /* step 2 */
+            var x, y;
+            x = d3.scale.linear()
+                    .domain([0,d3.max(AgencyValue)])
+                    .range([0.0, 150.0]);
+
+            var left_width = 80;
+            var gap = 2;
+            // redefine y for adjusting the gap
+            y = d3.scale.ordinal()
+                    .domain(AgencyValue)
+                    .rangeBands([0, (bar_height + 2 * gap) * AgencyName.length]);
+            var chart = d3.select("#Borough"+borough)
+                    .append('svg')
+                    .attr('class', 'agchart').style("background",mapColor[borough])
+                    .attr('width', left_width + width + 40)
+                    .attr('height', (bar_height + gap * 2) * AgencyName.length + 30)
+                    .append("g")
+                    .attr("transform", "translate(10, 20)");
+
+            chart.selectAll("line")
+                    .data(x.ticks(10))
+                    .enter().append("line")
+                    .attr("x1", function(d) { return x(d) + left_width; })
+                    .attr("x2", function(d) { return x(d) + left_width; })
+                    .attr("y1", 0)
+                    .attr("y2", (bar_height + gap * 2) * AgencyName.length);
+
+            chart.selectAll(".rule")
+                    .data(x.ticks(10))
+                    .enter().append("text")
+                    .attr("class", "rule")
+                    .attr("x", function(d) { return x(d) + left_width; })
+                    .attr("y", 0)
+                    .attr("dy", -6)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", 10)
+                    .text(String);
+
+            chart.selectAll("rect")
+                    .data(AgencyValue)
+                    .enter().append("rect")
+                    .attr("x", left_width)
+                    .attr("y", function(d) { return y(d) + gap; })
+                    .attr("width", x)
+                    .attr("height", bar_height);
+
+            chart.selectAll("text.score")
+                    .data(AgencyValue)
+                    .enter().append("text")
+                    .attr("x", function(d) { return x(d) + left_width+35; })
+                    .attr("y", function(d, i){ return y(d) + y.rangeBand()/2; } )
+                    .attr("dx", -5)
+                    .attr("dy", ".36em")
+                    .attr("text-anchor", "end")
+                    .attr('class', 'score')
+                    .text(function(d) {
+                        return d + "%";
+                    });
+
+            chart.selectAll("text.name")
+                    .data(AgencyName)
+                    .enter().append("text")
+                    .attr("x", left_width / 2)
+                    .attr("y", function(d, i){ return y(AgencyValue[i]) + y.rangeBand()/2; } )
+                    .attr("dy", ".36em")
+                    .attr("text-anchor", "middle")
+                    .attr('class', 'name')
+                    .text(String);
+
+        }
+         //
+     })
+
+
+     //WordCloud
+    d3.csv('/311DataVisualization/d3-311/ComplainCount.csv', function(err, agencyCompalinType) {
+
+        var dataset=[];
+        agencyCompalinType.sort(function(a,b){
+            return parseInt(b.count)- parseInt(a.count)
+        })
+        var total = agencyCompalinType.reduce(function(prev, b) {
+            return prev + parseInt(b.count);
+        },0);
+        for(var i=0; i<agencyCompalinType.length;i++){
+            dataset.push({"text":agencyCompalinType[i].ComplaintType,"size":(agencyCompalinType[i].count/total*1000)})
+        }
+        dataset.filter(function(itm,i,a){
+            return i==a.indexOf(itm);
+            //console.log(i)
+        });
+
+
+        var color = d3.scale.linear()
+                .domain([0,1,2,3,4,5,6,10,15,20,100])
+                .range(["#ddd", "#ccc", "#bbb", "#aaa", "#999", "#888", "#777", "#666", "#555", "#444", "#333", "#222"]);
+        var fills = d3.scale.category20();
+        d3.layout.cloud().size([500, 300])
+                .words(dataset)
+                .rotate(0)
+                .fontSize(function(d) { return d.size; })
+                .on("end", draw)
+                .start();
+
+        function draw(words) {
+            d3.select("#agencyComplaint").append("svg")
+                    .attr("width", 650)
+                    .attr("height", 350)
+                    .attr("class", "wordcloud")
+                    .append("g")
+                // without the transform, words words would get cutoff to the left and top, they would
+                // appear outside of the SVG area
+                    .attr("transform", "translate(320,200)")
+                    .selectAll("text")
+                    .data(words)
+                    .enter().append("text")
+                    .style("font-size", function(d) { return d.size + "px"; })
+                    .style("fill", function(d, i) { return fills(i); })
+                    .attr("transform", function(d) {
+                        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                    })
+                    .text(function(d) { return d.text; });
+        }
+
+    });
+
+
+
+    d3.tsv("Day_Hour_Count.txt",
+            function(d) {
+                return {
+                    day: +parseInt(d.day),
+                    hour: +parseInt(d.hour),
+                    value: +Math.log(parseInt(d.value))
+                };
+            },
+            function(error, data) {
+                var margin = { top: 50, right: 0, bottom: 20, left: 100 }
+                var width = 590 - margin.left - margin.right,
+                        height = 430 - margin.top - margin.bottom,
+                        gridSize = Math.floor(width / 24)+5,
+                        legendElementWidth = gridSize*2 ,
+                        buckets = 9,
+                        colors = ["#ffffd9","#edf8b1","#c7e9b4","#7fcdbb","#41b6c4","#1d91c0","#225ea8","#253494","#081d58"], // alternatively colorbrewer.YlGnBu[9]
+                        days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+                        times = ["1a", "2a", "3a", "4a", "5a", "6a", "7a", "8a", "9a", "10a", "11a", "12a", "1p", "2p", "3p", "4p", "5p", "6p", "7p", "8p", "9p", "10p", "11p", "12p"];
+
+                var colorScale = d3.scale.quantile()
+                        .domain([0, buckets - 1, d3.max(data, function (d) { return d.value; })])
+                        .range(colors);
+
+                var svg = d3.select("#heatMapChart").append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                var dayLabels = svg.selectAll(".dayLabel")
+                        .data(days)
+                        .enter().append("text")
+                        .text(function (d) { return d; })
+                        .attr("x", 0)
+                        .attr("y", function (d, i) { return i * gridSize; })
+                        .style("text-anchor", "end")
+                        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+                        .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis"); });
+
+                var timeLabels = svg.selectAll(".timeLabel")
+                        .data(times)
+                        .enter().append("text")
+                        .text(function(d) { return d; })
+                        .attr("x", function(d, i) { return i * gridSize; })
+                        .attr("y", 0)
+                        .style("text-anchor", "middle")
+                        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                        .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis"); });
+
+                var heatMap = svg.selectAll(".hour")
+                        .data(data)
+                        .enter().append("rect")
+                        .attr("x", function(d) { return (d.hour - 1) * gridSize; })
+                        .attr("y", function(d) { return (d.day - 1) * gridSize; })
+                        .attr("rx", 4)
+                        .attr("ry", 4)
+                        .attr("class", "hour bordered")
+                        .attr("width", gridSize)
+                        .attr("height", gridSize)
+                        .style("fill", colors[0]);
+
+                heatMap.transition().duration(1000)
+                        .style("fill", function(d) { return colorScale(d.value); });
+
+                heatMap.append("title").text(function(d) { return d.value; });
+
+                var legend = svg.selectAll(".legend")
+                        .data([0].concat(colorScale.quantiles()), function(d) { return d; })
+                        .enter().append("g")
+                        .attr("class", "legend");
+
+                legend.append("rect")
+                        .attr("x", function(d, i) { return legendElementWidth * i; })
+                        .attr("y", height-170)
+                        .attr("width", legendElementWidth)
+                        .attr("height", gridSize / 2)
+                        .style("fill", function(d, i) { return colors[i]; });
+
+                legend.append("text")
+                        .attr("class", "mono")
+                        .text(function(d) { return "≥ " + Math.round(d); })
+                        .attr("x", function(d, i) { return legendElementWidth * i; })
+                        .attr("y", height + gridSize-170);
+            });
+
+</script>
+</div>
+</body>
+</html>

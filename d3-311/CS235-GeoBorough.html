@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="/311DataVisualization/d3/d3.js"></script>
+    <script type="text/javascript" src="/311DataVisualization/d3/jquery-1.7.1.min.js"></script>
+    <style>
+
+        body {
+            background-image: url('../css/images/bg02.png');
+        }
+
+        #menuBar {
+            background-color: #364050;
+            margin-top: -20px;
+            width: 100%;
+        }
+
+        #logo {
+            font-family: 'Open Sans Condensed', sans-serif;
+            font-weight: 500;
+            font-size: 2em;
+            letter-spacing: 0.1em;
+            width: 184px;
+        }
+
+        #logo a {
+            display: block;
+
+            background-color: #c94663;
+
+            background-image: url('../css/images/bg01.png');
+
+            padding: 0.475em 0.25em;
+
+            border-radius: 0.2em;
+
+            text-align: center;
+
+            box-shadow: inset 0px 0px 0px 1px rgba(255, 255, 255, 0.15), 0 0.025em 0.15em 0em rgba(0, 0, 0, 0.25);
+
+            text-decoration: none;
+
+            color: #fff;
+
+        }
+        </style>
+</head>
+<body>
+<div id="menuBar">
+
+    <h1 id="logo">
+        <a>311</a>
+    </h1>
+    <div style="float: left;position:absolute;left: 12em;top:0em;color: #ffffff; ">
+
+        <table>
+            <tr>
+                <td><b>Borough&nbsp;&nbsp;</b></td>
+                <td>Bronx&nbsp;&nbsp;  </td>
+                <td>Brooklyn&nbsp;&nbsp;  </td>
+                <td>Manhattan&nbsp;&nbsp;  </td>
+                <td>Queens&nbsp;&nbsp;  </td>
+                <td>Staten Island&nbsp;&nbsp;  </td>
+            </tr>
+            <tr>
+                <td><b> Count</b></td>
+                <td>
+                    <div id="BRONX">0</div>
+                </td>
+                <td>
+                    <div id="BROOKLYN">0</div>
+                </td>
+                <td>
+                    <div id="MANHATTAN">0</div>
+                </td>
+                <td>
+                    <div id="QUEENS">0</div>
+                </td>
+                <td>
+                    <div id="STATEN ISLAND">0</div>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+</div>
+<div style="margin-left: 183px;margin-top: 23px;"><img src="/311DataVisualization/d3-311/borough-Trans.gif"  ></div>
+<div style="position: absolute; top:8.3em;left: 2.5em;" id="nycMap" ></div>
+<div style="position: absolute;float: left;left:1em;top:5em"><a href="/311DataVisualization/d3-311/CS235.html">Home</a> </div>
+
+<script>
+    var width = 960,
+            height = 500;
+
+    var svg = d3.select("#nycMap").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+    var projection = d3.geo.mercator()
+            .center([-73.94, 40.70])
+            .scale(60000)
+            .translate([(width) / 2, (height)/2]);
+
+    //Generate Map
+    d3.json("/311DataVisualization/d3-311/nyc.json", function(error, nyb) {
+
+        var path = d3.geo.path()
+                .projection(projection);
+
+        var g = svg.append("g");
+
+        g.append("g")
+                .attr("id", "boroughs")
+                .selectAll(".state")
+                .data(nyb.features)
+                .enter().append("path")
+                .attr("class", function(d){ return d.properties.name; })
+                .attr("d", path)
+                .style("fill", "rgba(0, 128, 0, .02)");
+
+
+
+    });
+   var c=svg.selectAll("circle");
+    var dataSet;
+
+    //Load in cities data
+    var i=0;
+    d3.csv("/311DataVisualization/d3-311/BoroughDataNov.csv", function(data) {
+
+        dataSet=data
+
+       // tick();
+    });
+
+    function update(data){
+
+        var count = parseInt(d3.select("#"+data[0].Borough).text());
+        d3.select("#"+data[0].Borough).text(++count)
+        c.data([data])
+                .enter()
+                .append("circle")
+                .attr("cx", function(d) {
+
+                    return projection([d[0].Longitude, d[0].Latitude])[0];
+                })
+                .attr("cy", function(d) {
+                    return projection([d[0].Longitude, d[0].Latitude])[1];
+                })
+                .attr("r", 5)
+                .style("fill", "yellow")
+                .style("opacity",.6);
+    }
+
+    var interval = setInterval(function() {
+
+        if(dataSet.lengt=0){clearInterval(interval);}
+        var indexToRemove = parseInt((Math.random() * dataSet.length));
+        var data=dataSet.splice(indexToRemove, 1)
+        update(data);
+    },1200);
+
+</script>
+
+</body>
+</html>
